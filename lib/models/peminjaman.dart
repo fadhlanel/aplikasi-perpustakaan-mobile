@@ -12,7 +12,9 @@ class Peminjaman {
     this.lokasiRak = 'Rak 3B - Kampus Utama',
     this.sampul,
     required this.tanggalPinjam,
+    this.tanggalAmbil,
     required this.tanggalJatuhTempo,
+    this.jumlahPerpanjangan = 0,
     required this.status,
     this.sisaHari = 4,
     this.hariBerjalan = 3,
@@ -52,7 +54,9 @@ class Peminjaman {
       lokasiRak: json['lokasi_rak']?.toString() ?? 'Rak 3B - Kampus Utama',
       sampul: buku?['sampul']?.toString() ?? json['sampul']?.toString(),
       tanggalPinjam: json['tanggal_pinjam']?.toString() ?? '19 Okt 2024',
+      tanggalAmbil: json['tanggal_ambil']?.toString(),
       tanggalJatuhTempo: json['tanggal_jatuh_tempo']?.toString() ?? '26 Okt 2024',
+      jumlahPerpanjangan: (json['jumlah_perpanjangan'] as num?)?.toInt() ?? 0,
       status: status,
       sisaHari: (json['sisa_hari'] as num?)?.toInt() ?? (status == 'dikembalikan' ? 0 : 4),
       hariBerjalan: (json['hari_berjalan'] as num?)?.toInt() ?? 3,
@@ -95,7 +99,9 @@ class Peminjaman {
   final String lokasiRak;
   final String? sampul;
   final String tanggalPinjam;
+  final String? tanggalAmbil;
   final String tanggalJatuhTempo;
+  final int jumlahPerpanjangan;
   final String status;
   final int sisaHari;
   final int hariBerjalan;
@@ -106,6 +112,16 @@ class Peminjaman {
   double get persentaseWaktu =>
       durasiHariTotal > 0 ? (hariBerjalan / durasiHariTotal).clamp(0.0, 1.0) : 0.0;
   int get persentaseInt => (persentaseWaktu * 100).toInt();
+
+  static String _tambahHariKeTanggal(String? tanggal, int hari) {
+    if (tanggal == null || tanggal.isEmpty) {
+      return DateTime.now().add(Duration(days: hari)).toIso8601String();
+    }
+    final parsed = DateTime.tryParse(tanggal);
+    if (parsed == null) return tanggal;
+    final baru = parsed.add(Duration(days: hari));
+    return '${baru.year}-${baru.month.toString().padLeft(2, '0')}-${baru.day.toString().padLeft(2, '0')}';
+  }
 
   Peminjaman perpanjangTujuhHari() {
     return Peminjaman(
@@ -120,7 +136,9 @@ class Peminjaman {
       lokasiRak: lokasiRak,
       sampul: sampul,
       tanggalPinjam: tanggalPinjam,
-      tanggalJatuhTempo: '02 Nov 2024',
+      tanggalAmbil: tanggalAmbil,
+      tanggalJatuhTempo: _tambahHariKeTanggal(tanggalJatuhTempo, 7),
+      jumlahPerpanjangan: jumlahPerpanjangan + 1,
       status: status,
       sisaHari: sisaHari + 7,
       hariBerjalan: hariBerjalan,

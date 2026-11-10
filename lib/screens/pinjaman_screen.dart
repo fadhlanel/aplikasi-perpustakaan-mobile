@@ -67,8 +67,9 @@ class _PinjamanScreenState extends State<PinjamanScreen> {
           ElevatedButton(
             onPressed: () async {
               Navigator.of(ctx).pop();
+              if (!mounted) return;
               final success = await provider.perpanjangPinjaman(loan.id);
-              if (!context.mounted) return;
+              if (!mounted) return;
               if (success) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -185,7 +186,7 @@ class _PinjamanScreenState extends State<PinjamanScreen> {
                     Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppTheme.surfaceWhite,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Icon(
