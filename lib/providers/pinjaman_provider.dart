@@ -151,6 +151,7 @@ class PinjamanProvider extends ChangeNotifier {
     String? tanggalAmbil,
   }) async {
     loading = true;
+    error = null;
     notifyListeners();
 
     try {
@@ -160,8 +161,19 @@ class PinjamanProvider extends ChangeNotifier {
         'nama_peminjam': nama,
         'tanggal_ambil': tanggalAmbil,
       });
+    } on ApiException catch (e) {
+      if (!e.isNetworkError) {
+        // Error HTTP (4xx/5xx): jangan buat pinjaman lokal, tampilkan pesan.
+        loading = false;
+        error = e.message;
+        notifyListeners();
+        return false;
+      }
+      // Jaringan terputus: lanjutkan ke pinjaman lokal (offline mode).
     } catch (_) {
-      // API offline fallback
+      loading = false;
+      notifyListeners();
+      return false;
     }
 
     final newLoan = Peminjaman(

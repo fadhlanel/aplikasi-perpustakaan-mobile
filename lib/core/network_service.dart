@@ -1,12 +1,14 @@
 import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'api_client.dart';
 
 enum ConnectionStatus {
-  connected,   // Terhubung ke REST API
-  apiOffline,  // Terhubung ke internet, namun server API tidak dapat dijangkau
-  noInternet,  // Tidak ada koneksi internet sama sekali
+  connected, // Terhubung ke REST API
+  apiOffline, // Terhubung ke internet, namun server API tidak dapat dijangkau
+  noInternet, // Tidak ada koneksi internet sama sekali
 }
 
 class NetworkService extends ChangeNotifier {
@@ -15,8 +17,10 @@ class NetworkService extends ChangeNotifier {
     _startPeriodicCheck();
   }
 
-  /// Interval pengecekan koneksi otomatis ke API.
-  static const Duration checkInterval = Duration(seconds: 15);
+  /// Interval pengecekan otomatis ke API.
+  static const Duration checkInterval = Duration(seconds: 60);
+
+  static const Duration _probeTimeout = Duration(seconds: 8);
 
   Timer? _timer;
   ConnectionStatus _status = ConnectionStatus.connected;
@@ -60,6 +64,12 @@ class NetworkService extends ChangeNotifier {
     });
   }
 
+  /// URL health check backend. `/health` berada di root, bukan di bawah `/api/v1`.
+  static Uri get healthUri {
+    final base = Uri.parse(ApiClient.baseUrl);
+    return base.replace(path: '/health', query: null);
+  }
+
   /// Memeriksa status koneksi internet dan API
   Future<ConnectionStatus> checkConnection() async {
     if (_isChecking) return _status;
@@ -68,7 +78,6 @@ class NetworkService extends ChangeNotifier {
 
     bool hasInternet = false;
 
-    // Laravel health endpoint default: /up.
     // 1. Cek apakah ada akses internet ke luar
     try {
       final probe = await http
@@ -98,21 +107,28 @@ class NetworkService extends ChangeNotifier {
 
     // 2. Internet ada, sekarang cek apakah REST API kita bisa dihubungi
     try {
-      final apiUri = Uri.parse('${ApiClient.baseUrl}/buku?per_page=1');
-      final res = await http.get(apiUri, headers: {
-        'Accept': 'application/json',
-      }).timeout(const Duration(seconds: 4));
+      final res = await http
+          .get(healthUri, headers: const {'Accept': 'application/json'})
+          .timeout(_probeTimeout);
 
-      if (res.statusCode < 500) {
+      // /health mengembalikan 200 saat aplikasi dan database siap,
+      // 503 saat database tidak tersedia. Keduanya berarti server terjangkau.
+      if (res.statusCode == 200) {
         _status = ConnectionStatus.connected;
         _lastError = null;
-      } else {
+      } else if (res.statusCode >= 500) {
         _status = ConnectionStatus.apiOffline;
-        _lastError = 'Server API mengembalikan kode ${res.statusCode}.';
+        _lastError = _healthMessage(res) ??
+            'Server API mengembalikan kode ${res.statusCode}.';
+      } else {
+        // 404/405: endpoint health belum ada, tapi server merespons.
+        _status = ConnectionStatus.connected;
+        _lastError = null;
       }
     } catch (e) {
       _status = ConnectionStatus.apiOffline;
-      _lastError = 'Server REST API (${ApiClient.baseUrl}) tidak dapat dijangkau.';
+      _lastError =
+          'Server REST API (${ApiClient.baseUrl}) tidak dapat dijangkau.';
     }
 
     _isChecking = false;
@@ -120,5 +136,14 @@ class NetworkService extends ChangeNotifier {
     notifyListeners();
     return _status;
   }
-}
 
+  String? _healthMessage(http.Response res) {
+    try {
+      final body = jsonDecode(utf8.decode(res.bodyBytes));
+      if (body is Map<String, dynamic> && body['database'] == 'unavailable') {
+        return 'Server API aktif, tetapi database tidak tersedia.';
+      }
+    } catch (_) {}
+    return null;
+  }
+}

@@ -246,17 +246,23 @@ class BukuProvider extends ChangeNotifier {
         await OfflineCache.saveBooks(res);
       }
       _setLoading(false, error: null);
-    } catch (_) {
-      // Fallback offline resilien: coba muat dari data cache terakhir
-      final cached = await OfflineCache.getBooks();
-      if (cached != null) {
-        final cachedItems = _parseBukuList(cached);
-        if (cachedItems.isNotEmpty) {
-          items = cachedItems;
-          total = items.length;
+    } catch (e) {
+      // HTTP error (4xx/5xx) bukan masalah jaringan: tampilkan pesan,
+      // jangan sembunyikan di balik data cache.
+      if (e is ApiException && !e.isNetworkError) {
+        _setLoading(false, error: e.message);
+      } else {
+        // Fallback offline resilien: coba muat dari data cache terakhir
+        final cached = await OfflineCache.getBooks();
+        if (cached != null) {
+          final cachedItems = _parseBukuList(cached);
+          if (cachedItems.isNotEmpty) {
+            items = cachedItems;
+            total = items.length;
+          }
         }
+        _setLoading(false, error: null);
       }
-      _setLoading(false, error: null);
     } finally {
       notifyListeners();
     }
