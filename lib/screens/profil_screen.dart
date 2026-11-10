@@ -1,17 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../core/app_constants.dart';
 import '../core/app_theme.dart';
 import '../core/offline_cache.dart';
 import '../core/theme_provider.dart';
-import '../models/buku.dart';
-import '../models/peminjaman.dart';
 import '../providers/auth_provider.dart';
 import '../providers/buku_provider.dart';
 import '../providers/pinjaman_provider.dart';
 import '../widgets/book_cover_widget.dart';
-import 'detail_buku_screen.dart';
 import 'login_screen.dart';
 
 /// Screen 6: Profil Siswa Screen
@@ -165,7 +161,7 @@ class ProfilScreen extends StatelessWidget {
                         : ListView.separated(
                             controller: scrollController,
                             itemCount: bookmarked.length,
-                            separatorBuilder: (_, __) => const SizedBox(height: 10),
+                            separatorBuilder: (_, _) => const SizedBox(height: 10),
                             itemBuilder: (ctx, i) {
                               final buku = bookmarked[i];
                               return Container(
@@ -295,7 +291,7 @@ class ProfilScreen extends StatelessWidget {
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
                       value: hMinus3,
-                      activeColor: AppTheme.primaryNavy,
+                      activeThumbColor: AppTheme.primaryNavy,
                       title: const Text('Pengingat H-3 Sebelum Jatuh Tempo', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
                       subtitle: const Text('Memberi waktu persiapan mengembalikan buku ke perpustakaan', style: TextStyle(fontSize: 11, color: AppTheme.textMuted)),
                       onChanged: (v) => setState(() => hMinus3 = v),
@@ -303,7 +299,7 @@ class ProfilScreen extends StatelessWidget {
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
                       value: hDay,
-                      activeColor: AppTheme.primaryNavy,
+                      activeThumbColor: AppTheme.primaryNavy,
                       title: const Text('Pengingat Hari-H Pengembalian', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
                       subtitle: const Text('Notifikasi pagi hari jam 07:00 pada tanggal jatuh tempo', style: TextStyle(fontSize: 11, color: AppTheme.textMuted)),
                       onChanged: (v) => setState(() => hDay = v),
@@ -311,7 +307,7 @@ class ProfilScreen extends StatelessWidget {
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
                       value: sound,
-                      activeColor: AppTheme.primaryNavy,
+                      activeThumbColor: AppTheme.primaryNavy,
                       title: const Text('Suara & Getar Pengingat', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
                       subtitle: const Text('Bunyikan alarm ringan saat notifikasi tiba', style: TextStyle(fontSize: 11, color: AppTheme.textMuted)),
                       onChanged: (v) => setState(() => sound = v),
@@ -435,7 +431,7 @@ class ProfilScreen extends StatelessWidget {
                 Expanded(
                   child: ListView.separated(
                     itemCount: visits.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    separatorBuilder: (_, _) => const SizedBox(height: 8),
                     itemBuilder: (ctx, i) {
                       final v = visits[i];
                       return Container(
@@ -740,7 +736,7 @@ class ProfilScreen extends StatelessWidget {
                         style: const TextStyle(fontSize: 11, color: AppTheme.textMuted),
                       ),
                       value: isDark,
-                      activeColor: AppTheme.cyanAccent,
+                      activeThumbColor: AppTheme.cyanAccent,
                       onChanged: (val) {
                         themeProv.setDark(val);
                       },
@@ -1260,7 +1256,7 @@ class ProfilScreen extends StatelessWidget {
                       BookCoverWidget(
                         judul: activeLoan.judulBuku,
                         penulis: activeLoan.pengarang,
-                        coverUrl: activeLoan.sampul,
+                        sampulUrl: activeLoan.sampul,
                         width: 44,
                         height: 60,
                         borderRadius: 6,

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'package:pustaka_digital/core/app_theme.dart';
 import 'package:pustaka_digital/core/network_service.dart';
+import 'package:pustaka_digital/core/theme_provider.dart';
 import 'package:pustaka_digital/providers/auth_provider.dart';
 import 'package:pustaka_digital/providers/buku_provider.dart';
 import 'package:pustaka_digital/providers/pinjaman_provider.dart';
@@ -13,10 +14,12 @@ import 'package:pustaka_digital/screens/login_screen.dart';
 import 'package:pustaka_digital/screens/pinjaman_screen.dart';
 import 'package:pustaka_digital/screens/profil_screen.dart';
 import 'package:pustaka_digital/screens/splash_screen.dart';
+import 'package:pustaka_digital/widgets/api_status_badge.dart';
 
 Widget createTestApp(Widget child) {
   return MultiProvider(
     providers: [
+      ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ChangeNotifierProvider(create: (_) => NetworkService()),
       ChangeNotifierProvider(create: (_) => AuthProvider()),
       ChangeNotifierProvider(create: (_) => BukuProvider()),
@@ -38,14 +41,17 @@ void main() {
     expect(find.text('SMK Negeri 1 Surabaya'), findsOneWidget);
   });
 
-  testWidgets('Layar 2: Login screen menampilkan form NIS, PIN, dan tombol Masuk', (tester) async {
+  testWidgets('Layar 2: Login screen menampilkan form NIS, PIN, dan tombol Masuk tanpa masuk cepat', (tester) async {
     await tester.pumpWidget(createTestApp(const LoginScreen()));
 
+    expect(find.text('Selamat Datang Kembali!'), findsOneWidget);
     expect(find.text('Login Siswa'), findsOneWidget);
     expect(find.text('Nomor Induk Siswa (NIS)'), findsOneWidget);
     expect(find.text('Password / PIN Keanggotaan'), findsOneWidget);
     expect(find.text('Masuk'), findsOneWidget);
-    expect(find.text('Masuk Cepat dengan Akun Siswa Demo'), findsOneWidget);
+    expect(find.text('Ingat Saya'), findsOneWidget);
+    // Fitur masuk cepat sudah dihilangkan, tidak boleh ada lagi.
+    expect(find.textContaining('Masuk Cepat'), findsNothing);
   });
 
   testWidgets('Layar 3: Home screen menampilkan sapaan siswa, status pinjaman, & kategori', (tester) async {
@@ -55,7 +61,8 @@ void main() {
     expect(find.text('STATUS PEMINJAMAN ANDA'), findsOneWidget);
     expect(find.text('Kategori Buku'), findsOneWidget);
     expect(find.text('Rekomendasi Terpopuler'), findsOneWidget);
-    expect(find.text('API Terhubung'), findsOneWidget);
+    // Badge status koneksi REST API tampil di header beranda.
+    expect(find.byType(ApiStatusBadge), findsOneWidget);
   });
 
   testWidgets('Layar 4: Detail buku screen menampilkan ketersediaan, lokasi rak, & reservasi', (tester) async {
