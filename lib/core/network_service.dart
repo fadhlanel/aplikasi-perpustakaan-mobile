@@ -12,8 +12,13 @@ enum ConnectionStatus {
 class NetworkService extends ChangeNotifier {
   NetworkService() {
     checkConnection();
+    _startPeriodicCheck();
   }
 
+  /// Interval pengecekan koneksi otomatis ke API.
+  static const Duration checkInterval = Duration(seconds: 15);
+
+  Timer? _timer;
   ConnectionStatus _status = ConnectionStatus.connected;
   bool _isChecking = false;
   String? _lastError;
@@ -37,6 +42,22 @@ class NetworkService extends ChangeNotifier {
       case ConnectionStatus.noInternet:
         return 'Tidak Ada Koneksi Internet';
     }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _timer = null;
+    super.dispose();
+  }
+
+  void _startPeriodicCheck() {
+    _timer?.cancel();
+    _timer = Timer.periodic(checkInterval, (_) {
+      if (!_isChecking) {
+        checkConnection();
+      }
+    });
   }
 
   /// Memeriksa status koneksi internet dan API
