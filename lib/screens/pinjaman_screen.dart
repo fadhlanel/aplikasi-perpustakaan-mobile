@@ -543,9 +543,12 @@ class _PinjamanScreenState extends State<PinjamanScreen> {
             child: ElevatedButton.icon(
               onPressed: loan.bisaPerpanjang ? () => _handlePerpanjang(loan, provider) : null,
               icon: const Icon(Icons.autorenew_rounded, size: 18),
-              label: Text(
-                loan.bisaPerpanjang ? 'Ajukan Perpanjangan Waktu (+7 Hari)' : 'Perpanjangan Sudah Digunakan',
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+              label: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  loan.bisaPerpanjang ? 'Ajukan Perpanjangan Waktu (+7 Hari)' : 'Perpanjangan Sudah Digunakan',
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                ),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryNavy,

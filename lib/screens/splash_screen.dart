@@ -183,7 +183,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
               // Loading Bar & Status
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 48),
+                padding: const EdgeInsets.symmetric(horizontal: 32),
                 child: Column(
                   children: [
                     AnimatedBuilder(
@@ -205,6 +205,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                     const SizedBox(height: 16),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         const SizedBox(
                           width: 14,
@@ -215,11 +216,15 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                           ),
                         ),
                         const SizedBox(width: 10),
-                        Text(
-                          'Menghubungkan basis data perpustakaan...',
-                          style: TextStyle(
-                            fontSize: 12.5,
-                            color: Colors.white.withValues(alpha: 0.75),
+                        Flexible(
+                          child: Text(
+                            'Menghubungkan basis data...',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.white.withValues(alpha: 0.75),
+                            ),
                           ),
                         ),
                       ],
@@ -232,25 +237,28 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
               // Footer
               Padding(
-                padding: const EdgeInsets.only(bottom: 24),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.school_rounded,
-                      size: 16,
-                      color: Colors.white.withValues(alpha: 0.6),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'SMK Negeri 1 Surabaya  •',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.white.withValues(alpha: 0.65),
-                        fontWeight: FontWeight.w500,
+                padding: const EdgeInsets.only(bottom: 24, left: 16, right: 16),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.school_rounded,
+                        size: 16,
+                        color: Colors.white.withValues(alpha: 0.6),
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 8),
+                      Text(
+                        'SMK Negeri 1 Surabaya',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.white.withValues(alpha: 0.65),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],

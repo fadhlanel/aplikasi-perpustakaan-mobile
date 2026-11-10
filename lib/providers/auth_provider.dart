@@ -14,14 +14,19 @@ class AuthProvider extends ChangeNotifier {
   static const String _keyName = 'student_name';
   static const String _keyKelas = 'student_kelas';
 
-  bool _isLoggedIn = true; // Default true agar bisa langsung eksplorasi, dapat logout
+  bool _isLoggedIn = false; // Default false saat baru install, harus login
   bool _isLoading = true;
 
   UserProfile _profile = const UserProfile(
-    nama: AppConstants.defaultStudentName,
-    nis: AppConstants.defaultNis,
-    kelas: AppConstants.defaultKelas,
+    nama: 'Tamu Perpustakaan',
+    nis: '-',
+    kelas: '-',
     sekolah: AppConstants.schoolName,
+    isVerified: false,
+    badge: 'Anggota Baru',
+    bukuDibacaCount: 0,
+    bukuAktifCount: 0,
+    dendaCount: 0,
   );
 
   bool get isLoggedIn => _isLoggedIn;
@@ -34,18 +39,27 @@ class AuthProvider extends ChangeNotifier {
 
     try {
       final prefs = await SharedPreferences.getInstance();
-      _isLoggedIn = prefs.getBool(_keyIsLoggedIn) ?? true;
-      final savedNis = prefs.getString(_keyNis) ?? AppConstants.defaultNis;
-      final savedName = prefs.getString(_keyName) ?? AppConstants.defaultStudentName;
-      final savedKelas = prefs.getString(_keyKelas) ?? AppConstants.defaultKelas;
+      _isLoggedIn = prefs.getBool(_keyIsLoggedIn) ?? false;
 
-      _profile = _profile.copyWith(
-        nis: savedNis,
-        nama: savedName,
-        kelas: savedKelas,
-      );
+      if (_isLoggedIn) {
+        final savedNis = prefs.getString(_keyNis) ?? AppConstants.defaultNis;
+        final savedName = prefs.getString(_keyName) ?? AppConstants.defaultStudentName;
+        final savedKelas = prefs.getString(_keyKelas) ?? AppConstants.defaultKelas;
+
+        _profile = UserProfile(
+          nis: savedNis,
+          nama: savedName,
+          kelas: savedKelas,
+          sekolah: AppConstants.schoolName,
+          isVerified: true,
+          badge: 'Peminjam Teladan',
+          bukuDibacaCount: 12,
+          bukuAktifCount: 1,
+          dendaCount: 0,
+        );
+      }
     } catch (_) {
-      _isLoggedIn = true;
+      _isLoggedIn = false;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -70,9 +84,17 @@ class AuthProvider extends ChangeNotifier {
     }
 
     _isLoggedIn = true;
-    _profile = _profile.copyWith(
+    final isDemoAccount = nis.trim() == AppConstants.defaultNis;
+    _profile = UserProfile(
       nis: nis.trim(),
-      nama: nis.contains('2122') ? AppConstants.defaultStudentName : 'Siswa SMKN 1',
+      nama: isDemoAccount ? AppConstants.defaultStudentName : 'Siswa SMKN 1 (${nis.trim()})',
+      kelas: isDemoAccount ? AppConstants.defaultKelas : 'XII Rekayasa Perangkat Lunak',
+      sekolah: AppConstants.schoolName,
+      isVerified: true,
+      badge: 'Peminjam Teladan',
+      bukuDibacaCount: isDemoAccount ? 12 : 3,
+      bukuAktifCount: isDemoAccount ? 1 : 0,
+      dendaCount: 0,
     );
 
     if (rememberMe) {
@@ -81,6 +103,7 @@ class AuthProvider extends ChangeNotifier {
         await prefs.setBool(_keyIsLoggedIn, true);
         await prefs.setString(_keyNis, _profile.nis);
         await prefs.setString(_keyName, _profile.nama);
+        await prefs.setString(_keyKelas, _profile.kelas);
       } catch (_) {}
     }
 
@@ -91,9 +114,23 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> logout() async {
     _isLoggedIn = false;
+    _profile = const UserProfile(
+      nama: 'Tamu Perpustakaan',
+      nis: '-',
+      kelas: '-',
+      sekolah: AppConstants.schoolName,
+      isVerified: false,
+      badge: 'Anggota Baru',
+      bukuDibacaCount: 0,
+      bukuAktifCount: 0,
+      dendaCount: 0,
+    );
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_keyIsLoggedIn, false);
+      await prefs.remove(_keyNis);
+      await prefs.remove(_keyName);
+      await prefs.remove(_keyKelas);
     } catch (_) {}
     notifyListeners();
   }

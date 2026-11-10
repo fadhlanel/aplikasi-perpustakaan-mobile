@@ -1,12 +1,28 @@
 import 'package:flutter/foundation.dart';
 
 import '../core/api_client.dart';
+import '../core/offline_cache.dart';
 import '../models/buku.dart';
 import '../models/kategori.dart';
 
 class BukuProvider extends ChangeNotifier {
   BukuProvider() {
     _initDefaultData();
+    _loadFromCache();
+  }
+
+  Future<void> _loadFromCache() async {
+    try {
+      final cached = await OfflineCache.getBooks();
+      if (cached != null) {
+        final cachedItems = _parseBukuList(cached);
+        if (cachedItems.isNotEmpty) {
+          items = cachedItems;
+          total = items.length;
+          notifyListeners();
+        }
+      }
+    } catch (_) {}
   }
 
   List<Buku> items = <Buku>[];
@@ -226,10 +242,20 @@ class BukuProvider extends ChangeNotifier {
         currentPage = (meta['current_page'] as num?)?.toInt() ?? 1;
         lastPage = (meta['last_page'] as num?)?.toInt() ?? 1;
         total = (meta['total'] as num?)?.toInt() ?? items.length;
+        // Simpan ke cache lokal untuk akses offline
+        await OfflineCache.saveBooks(res);
       }
       _setLoading(false, error: null);
     } catch (_) {
-      // Fallback offline resilien agar app selalu dapat dipresentasikan
+      // Fallback offline resilien: coba muat dari data cache terakhir
+      final cached = await OfflineCache.getBooks();
+      if (cached != null) {
+        final cachedItems = _parseBukuList(cached);
+        if (cachedItems.isNotEmpty) {
+          items = cachedItems;
+          total = items.length;
+        }
+      }
       _setLoading(false, error: null);
     } finally {
       notifyListeners();

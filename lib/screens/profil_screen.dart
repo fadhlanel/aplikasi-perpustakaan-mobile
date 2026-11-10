@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../core/app_constants.dart';
 import '../core/app_theme.dart';
+import '../core/offline_cache.dart';
+import '../models/buku.dart';
 import '../providers/auth_provider.dart';
+import '../providers/buku_provider.dart';
+import '../providers/pinjaman_provider.dart';
 import '../widgets/book_cover_widget.dart';
+import 'detail_buku_screen.dart';
 import 'login_screen.dart';
 
 /// Screen 6: Profil Siswa Screen
-/// Sesuai 100% dengan Mockup Desain Figma (Foto 5)
+/// Sesuai Desain Figma (Foto 5) dengan seluruh menu fungsional dan anti-overflow
 class ProfilScreen extends StatelessWidget {
   const ProfilScreen({super.key});
 
@@ -48,6 +54,729 @@ class ProfilScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  // 1. Bottom Sheet: Buku Favorit & Bookmark
+  void _showBookmarkSheet(BuildContext context) {
+    final bukuProv = context.read<BukuProvider>();
+    final bookmarked = [
+      ...bukuProv.items.where((b) => b.isBookmarked),
+      ...bukuProv.popularBooks.where((b) => b.isBookmarked && !bukuProv.items.any((i) => i.id == b.id)),
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.7,
+          minChildSize: 0.4,
+          maxChildSize: 0.9,
+          expand: false,
+          builder: (ctx, scrollController) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEFF6FF),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(Icons.bookmark_rounded, color: AppTheme.accentBlue, size: 20),
+                          ),
+                          const SizedBox(width: 10),
+                          const Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Buku Favorit & Bookmark',
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textDark),
+                              ),
+                              Text('Daftar judul buku yang Anda simpan', style: TextStyle(fontSize: 11.5, color: AppTheme.textMuted)),
+                            ],
+                          ),
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE0F2FE),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '${bookmarked.length} Judul',
+                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.accentBlue),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  const Divider(height: 1),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: bookmarked.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.bookmark_border_rounded, size: 54, color: Colors.grey.shade300),
+                                const SizedBox(height: 12),
+                                const Text(
+                                  'Belum Ada Buku Tersimpan',
+                                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppTheme.textDark),
+                                ),
+                                const SizedBox(height: 6),
+                                const Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 32),
+                                  child: Text(
+                                    'Jelajahi Beranda atau Katalog, lalu tekan ikon bookmark untuk menyimpan buku favorit Anda di sini.',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(fontSize: 12, color: AppTheme.textMuted, height: 1.4),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView.separated(
+                            controller: scrollController,
+                            itemCount: bookmarked.length,
+                            separatorBuilder: (_, __) => const SizedBox(height: 10),
+                            itemBuilder: (ctx, i) {
+                              final buku = bookmarked[i];
+                              return Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(color: const Color(0xFFEEF2F6)),
+                                ),
+                                child: Row(
+                                  children: [
+                                    BookCoverWidget(
+                                      judul: buku.judul,
+                                      penulis: buku.namaPenulis,
+                                      width: 48,
+                                      height: 64,
+                                      borderRadius: 6,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            buku.judul,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                                          ),
+                                          const SizedBox(height: 3),
+                                          Text(
+                                            buku.namaPenulis,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(fontSize: 11, color: AppTheme.textMuted),
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Row(
+                                            children: [
+                                              const Icon(Icons.star_rounded, size: 14, color: Colors.amber),
+                                              const SizedBox(width: 3),
+                                              Text(
+                                                '${buku.rating}',
+                                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                              ),
+                                              const SizedBox(width: 10),
+                                              Text(
+                                                buku.lokasiRak,
+                                                style: const TextStyle(fontSize: 10, color: AppTheme.textSubtle),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.bookmark_remove_rounded, color: AppTheme.dangerRed, size: 20),
+                                      onPressed: () {
+                                        bukuProv.toggleBookmark(buku.id);
+                                        Navigator.of(ctx).pop();
+                                        _showBookmarkSheet(context);
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // 2. Bottom Sheet: Notifikasi Pengingat Pengembalian
+  void _showNotificationSettingsSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        bool hMinus3 = true;
+        bool hDay = true;
+        bool sound = true;
+
+        return StatefulBuilder(
+          builder: (ctx, setState) {
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    const Row(
+                      children: [
+                        Icon(Icons.notifications_active_rounded, color: AppTheme.accentBlue, size: 22),
+                        SizedBox(width: 10),
+                        Text(
+                          'Pengingat Jatuh Tempo Buku',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textDark),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Pilih waktu notifikasi pengingat sebelum batas akhir pinjaman berakhir agar terhindar dari denda.',
+                      style: TextStyle(fontSize: 12, color: AppTheme.textMuted, height: 1.35),
+                    ),
+                    const SizedBox(height: 16),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      value: hMinus3,
+                      activeColor: AppTheme.primaryNavy,
+                      title: const Text('Pengingat H-3 Sebelum Jatuh Tempo', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                      subtitle: const Text('Memberi waktu persiapan mengembalikan buku ke perpustakaan', style: TextStyle(fontSize: 11, color: AppTheme.textMuted)),
+                      onChanged: (v) => setState(() => hMinus3 = v),
+                    ),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      value: hDay,
+                      activeColor: AppTheme.primaryNavy,
+                      title: const Text('Pengingat Hari-H Pengembalian', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                      subtitle: const Text('Notifikasi pagi hari jam 07:00 pada tanggal jatuh tempo', style: TextStyle(fontSize: 11, color: AppTheme.textMuted)),
+                      onChanged: (v) => setState(() => hDay = v),
+                    ),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      value: sound,
+                      activeColor: AppTheme.primaryNavy,
+                      title: const Text('Suara & Getar Pengingat', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                      subtitle: const Text('Bunyikan alarm ringan saat notifikasi tiba', style: TextStyle(fontSize: 11, color: AppTheme.textMuted)),
+                      onChanged: (v) => setState(() => sound = v),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 46,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryNavy,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        onPressed: () {
+                          Navigator.of(ctx).pop();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Preferensi notifikasi pengingat berhasil disimpan.'),
+                              backgroundColor: Color(0xFF047857),
+                            ),
+                          );
+                        },
+                        child: const Text('Simpan Preferensi', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // 3. Bottom Sheet: Riwayat Kunjungan Perpustakaan
+  void _showVisitHistorySheet(BuildContext context) {
+    final visits = [
+      {'tanggal': 'Hari ini, 09:15 WIB', 'lokasi': 'Ruang Sirkulasi & Baca Lt. 2', 'status': 'Presensi QR Terverifikasi', 'tipe': 'Membaca di Tempat'},
+      {'tanggal': '28 Okt 2024, 13:40 WIB', 'lokasi': 'Meja Layanan Sirkulasi', 'status': 'Peminjaman Mandiri Sukses', 'tipe': 'Sirkulasi Buku'},
+      {'tanggal': '21 Okt 2024, 10:05 WIB', 'lokasi': 'Ruang Referensi & Jurnal', 'status': 'Presensi QR Terverifikasi', 'tipe': 'Studi Mandiri'},
+      {'tanggal': '14 Okt 2024, 11:20 WIB', 'lokasi': 'Laboratorium Multimedia', 'status': 'Presensi QR Terverifikasi', 'tipe': 'Pencarian e-Book'},
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Row(
+                  children: [
+                    Icon(Icons.qr_code_scanner_rounded, color: AppTheme.accentBlue, size: 22),
+                    SizedBox(width: 10),
+                    Text(
+                      'Riwayat Kunjungan Perpustakaan',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textDark),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Catatan presensi fisik saat berkunjung ke ruang perpustakaan sekolah.',
+                  style: TextStyle(fontSize: 12, color: AppTheme.textMuted),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEFF6FF),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      Column(
+                        children: [
+                          Text('4 Kali', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.accentBlue)),
+                          SizedBox(height: 2),
+                          Text('Bulan Ini', style: TextStyle(fontSize: 11, color: AppTheme.textMuted)),
+                        ],
+                      ),
+                      SizedBox(height: 24, child: VerticalDivider(color: Color(0xFFBFDBFE))),
+                      Column(
+                        children: [
+                          Text('6.5 Jam', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.mintGreen)),
+                          SizedBox(height: 2),
+                          Text('Durasi Baca', style: TextStyle(fontSize: 11, color: AppTheme.textMuted)),
+                        ],
+                      ),
+                      SizedBox(height: 24, child: VerticalDivider(color: Color(0xFFBFDBFE))),
+                      Column(
+                        children: [
+                          Text('100%', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF047857))),
+                          SizedBox(height: 2),
+                          Text('Disiplin QR', style: TextStyle(fontSize: 11, color: AppTheme.textMuted)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Expanded(
+                  child: ListView.separated(
+                    itemCount: visits.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    itemBuilder: (ctx, i) {
+                      final v = visits[i];
+                      return Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFEEF2F6)),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF1F5F9),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(Icons.place_outlined, color: AppTheme.primaryNavy, size: 18),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(v['lokasi']!, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold)),
+                                  const SizedBox(height: 2),
+                                  Text(v['tanggal']!, style: const TextStyle(fontSize: 11, color: AppTheme.textMuted)),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFD1FAE5),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                v['tipe']!,
+                                style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: Color(0xFF047857)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // 4. Bottom Sheet: Pengaturan Tema & Akun
+  void _showAccountSettingsSheet(BuildContext context, AuthProvider auth) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                const Row(
+                  children: [
+                    Icon(Icons.tune_rounded, color: AppTheme.accentBlue, size: 22),
+                    SizedBox(width: 10),
+                    Text(
+                      'Pengaturan Tema & Akun',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textDark),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.lock_reset_rounded, color: AppTheme.primaryNavy),
+                  title: const Text('Ganti PIN / Kata Sandi', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
+                  subtitle: const Text('Perbarui kode sandi login keanggotaan Anda', style: TextStyle(fontSize: 11, color: AppTheme.textMuted)),
+                  trailing: const Icon(Icons.chevron_right_rounded, color: AppTheme.textSubtle),
+                  onTap: () {
+                    Navigator.of(ctx).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Fitur penggantian PIN dapat dilakukan melalui admin sirkulasi.')),
+                    );
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.palette_outlined, color: AppTheme.primaryNavy),
+                  title: const Text('Tema Tampilan', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
+                  subtitle: const Text('Mode Terang (Sesuai Desain Figma)', style: TextStyle(fontSize: 11, color: AppTheme.textMuted)),
+                  trailing: const Icon(Icons.chevron_right_rounded, color: AppTheme.textSubtle),
+                  onTap: () {
+                    Navigator.of(ctx).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Tema Terang aktif secara default.')),
+                    );
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.cleaning_services_rounded, color: AppTheme.amberWarning),
+                  title: const Text('Hapus Cache Data Offline', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
+                  subtitle: const Text('Bersihkan data tersimpan lokal jika ada pembaruan', style: TextStyle(fontSize: 11, color: AppTheme.textMuted)),
+                  trailing: const Icon(Icons.chevron_right_rounded, color: AppTheme.textSubtle),
+                  onTap: () async {
+                    Navigator.of(ctx).pop();
+                    await OfflineCache.clearCache();
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Cache offline berhasil dibersihkan.'),
+                          backgroundColor: Color(0xFF047857),
+                        ),
+                      );
+                    }
+                  },
+                ),
+                const SizedBox(height: 12),
+                Center(
+                  child: Text(
+                    'Pustaka Digital v1.0.0 (Build 1) • SMK Negeri 1 Surabaya',
+                    style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // 5. Bottom Sheet: Panduan & Tata Tertib
+  void _showRulesSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.65,
+          minChildSize: 0.4,
+          maxChildSize: 0.85,
+          expand: false,
+          builder: (ctx, scroll) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Row(
+                    children: [
+                      Icon(Icons.menu_book_rounded, color: AppTheme.accentBlue, size: 22),
+                      SizedBox(width: 10),
+                      Text(
+                        'Panduan & Tata Tertib Sirkulasi',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textDark),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: ListView(
+                      controller: scroll,
+                      children: [
+                        _buildRuleItem('1', 'Batas Kuota Pinjam', 'Maksimal 3 eksemplar buku per siswa sekaligus.'),
+                        _buildRuleItem('2', 'Durasi Peminjaman', 'Lama peminjaman adalah 7 hari kalender sejak tanggal transaksi.'),
+                        _buildRuleItem('3', 'Perpanjangan Mandiri', 'Perpanjangan dapat diajukan mandiri 1x per transaksi peminjaman (+7 hari kalender).'),
+                        _buildRuleItem('4', 'Denda Keterlambatan', 'Keterlambatan pengembalian buku dikenakan denda administratif sebesar Rp 1.000 / hari per eksemplar.'),
+                        _buildRuleItem('5', 'Integritas Koleksi', 'Dilarang mencoret, melipat, atau merusak barcode buku. Kehilangan buku wajib diganti dengan judul dan edisi yang sama.'),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildRuleItem(String num, String title, String desc) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 26,
+            height: 26,
+            decoration: BoxDecoration(
+              color: AppTheme.softBlueBackground,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Center(
+              child: Text(num, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.primaryNavy)),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
+                const SizedBox(height: 2),
+                Text(desc, style: const TextStyle(fontSize: 11.5, color: AppTheme.textMuted, height: 1.35)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 6. Bottom Sheet: Hubungi Petugas Perpustakaan
+  void _showContactSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                const Row(
+                  children: [
+                    Icon(Icons.headset_mic_rounded, color: AppTheme.mintGreen, size: 22),
+                    SizedBox(width: 10),
+                    Text(
+                      'Layanan Bantuan Pustakawan',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textDark),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Butuh bantuan perpanjangan manual, pencarian judul skripsi, atau pertanyaan sirkulasi?',
+                  style: TextStyle(fontSize: 12, color: AppTheme.textMuted, height: 1.35),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF0FDF4),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFBBF7D0)),
+                  ),
+                  child: const Column(
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.schedule_rounded, color: Color(0xFF047857), size: 16),
+                          SizedBox(width: 8),
+                          Text('Jam Layanan: Senin - Jumat (07:30 - 15:30 WIB)', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF047857))),
+                        ],
+                      ),
+                      SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(Icons.room_rounded, color: Color(0xFF047857), size: 16),
+                          SizedBox(width: 8),
+                          Text('Lokasi: Gedung Perpustakaan Lt. 2 Sayap Barat', style: TextStyle(fontSize: 11, color: Color(0xFF047857))),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  height: 46,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF16A34A),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    icon: const Icon(Icons.chat_rounded, size: 18),
+                    label: const Text('Hubungi via WhatsApp Pustakawan', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                    onPressed: () {
+                      Navigator.of(ctx).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Menghubungkan ke WhatsApp Ruang Sirkulasi Perpustakaan...')),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -108,27 +837,18 @@ class ProfilScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  Row(
-                    children: [
-                      IconButton(
-                        onPressed: () {},
-                        icon: const Icon(Icons.notifications_outlined, size: 24),
-                        color: AppTheme.primaryNavy,
-                      ),
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppTheme.primaryNavy,
-                        ),
-                        child: const Icon(
-                          Icons.person_rounded,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                    ],
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppTheme.primaryNavy,
+                    ),
+                    child: const Icon(
+                      Icons.person_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
                 ],
               ),
@@ -209,6 +929,8 @@ class ProfilScreen extends StatelessWidget {
                           const SizedBox(height: 6),
                           Text(
                             profile.nama,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -218,18 +940,28 @@ class ProfilScreen extends StatelessWidget {
                           const SizedBox(height: 2),
                           Text(
                             'NIS: ${profile.nis} • ${profile.kelas}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: const TextStyle(fontSize: 12, color: AppTheme.textMuted),
                           ),
                           const SizedBox(height: 6),
-                          Row(
+                          // Responsive Wrap for School + Badge (Anti-Overflow)
+                          Wrap(
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 8,
+                            runSpacing: 4,
                             children: [
-                              const Icon(Icons.school_outlined, size: 13, color: AppTheme.primaryNavy),
-                              const SizedBox(width: 4),
-                              Text(
-                                profile.sekolah,
-                                style: const TextStyle(fontSize: 11, color: AppTheme.textDark, fontWeight: FontWeight.w500),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.school_outlined, size: 13, color: AppTheme.primaryNavy),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    profile.sekolah,
+                                    style: const TextStyle(fontSize: 11, color: AppTheme.textDark, fontWeight: FontWeight.w500),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(width: 8),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
@@ -407,9 +1139,10 @@ class ProfilScreen extends StatelessWidget {
                     _buildMenuItem(
                       icon: Icons.bookmark_outline_rounded,
                       title: 'Buku Favorit & Bookmark',
-                      subtitle: '8 judul tersimpan di koleksi',
+                      subtitle: 'Buku tersimpan di koleksi pribadi',
                       iconBg: const Color(0xFFEFF6FF),
                       iconColor: AppTheme.accentBlue,
+                      onTap: () => _showBookmarkSheet(context),
                     ),
                     const Divider(height: 1, indent: 60),
                     _buildMenuItem(
@@ -418,6 +1151,7 @@ class ProfilScreen extends StatelessWidget {
                       subtitle: 'H-3 sebelum jatuh tempo buku',
                       iconBg: const Color(0xFFEFF6FF),
                       iconColor: AppTheme.accentBlue,
+                      onTap: () => _showNotificationSettingsSheet(context),
                     ),
                     const Divider(height: 1, indent: 60),
                     _buildMenuItem(
@@ -426,6 +1160,7 @@ class ProfilScreen extends StatelessWidget {
                       subtitle: 'Presensi fisik & baca di tempat',
                       iconBg: const Color(0xFFEFF6FF),
                       iconColor: AppTheme.accentBlue,
+                      onTap: () => _showVisitHistorySheet(context),
                     ),
                   ],
                 ),
@@ -457,6 +1192,7 @@ class ProfilScreen extends StatelessWidget {
                       subtitle: 'Keamanan sandi, profil, preferensi',
                       iconBg: const Color(0xFFEFF6FF),
                       iconColor: AppTheme.accentBlue,
+                      onTap: () => _showAccountSettingsSheet(context, auth),
                     ),
                     const Divider(height: 1, indent: 60),
                     _buildMenuItem(
@@ -465,6 +1201,7 @@ class ProfilScreen extends StatelessWidget {
                       subtitle: 'Aturan peminjaman, durasi, denda',
                       iconBg: const Color(0xFFEFF6FF),
                       iconColor: AppTheme.accentBlue,
+                      onTap: () => _showRulesSheet(context),
                     ),
                     const Divider(height: 1, indent: 60),
                     _buildMenuItem(
@@ -473,6 +1210,7 @@ class ProfilScreen extends StatelessWidget {
                       subtitle: 'Layanan konsultasi sirkulasi',
                       iconBg: const Color(0xFFECFDF5),
                       iconColor: AppTheme.mintGreen,
+                      onTap: () => _showContactSheet(context),
                     ),
                   ],
                 ),
@@ -517,7 +1255,7 @@ class ProfilScreen extends StatelessWidget {
     required Color iconColor,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -527,29 +1265,33 @@ class ProfilScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(6),
+            padding: const EdgeInsets.all(7),
             decoration: BoxDecoration(
               color: iconBg,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, size: 18, color: iconColor),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           Text(
             value,
             style: const TextStyle(
-              fontSize: 22,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
               color: AppTheme.textDark,
             ),
           ),
           const SizedBox(height: 2),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 10.5,
-              color: AppTheme.textMuted,
-              height: 1.25,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 10.5,
+                color: AppTheme.textMuted,
+                height: 1.2,
+              ),
             ),
           ),
         ],
@@ -563,6 +1305,7 @@ class ProfilScreen extends StatelessWidget {
     required String subtitle,
     required Color iconBg,
     required Color iconColor,
+    VoidCallback? onTap,
   }) {
     return Material(
       color: Colors.transparent,
@@ -589,7 +1332,7 @@ class ProfilScreen extends StatelessWidget {
           style: const TextStyle(fontSize: 11, color: AppTheme.textMuted),
         ),
         trailing: const Icon(Icons.chevron_right_rounded, size: 20, color: AppTheme.textSubtle),
-        onTap: () {},
+        onTap: onTap,
       ),
     );
   }

@@ -198,7 +198,7 @@ class _KatalogScreenState extends State<KatalogScreen> {
                     : GridView.builder(
                         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
-                          childAspectRatio: 0.68,
+                          childAspectRatio: 0.64,
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
                         ),

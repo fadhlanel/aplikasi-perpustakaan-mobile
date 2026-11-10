@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../core/app_theme.dart';
+import '../core/network_service.dart';
 import '../models/buku.dart';
 import '../providers/auth_provider.dart';
 import '../providers/buku_provider.dart';
 import '../providers/pinjaman_provider.dart';
+import '../widgets/api_status_badge.dart';
 import '../widgets/book_cover_widget.dart';
 import '../widgets/custom_badge.dart';
 import 'detail_buku_screen.dart';
@@ -43,6 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final auth = context.watch<AuthProvider>();
     final bukuProv = context.watch<BukuProvider>();
     final pinjamanProv = context.watch<PinjamanProvider>();
+    final network = context.watch<NetworkService>();
     final profile = auth.profile;
 
     final activeLoan = pinjamanProv.activeLoans.isNotEmpty
@@ -54,6 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
+            await network.checkConnection();
             await bukuProv.loadFirst();
             await pinjamanProv.fetchApiLoans();
           },
@@ -109,6 +113,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     Row(
                       children: [
+                        // Status Keterhubungan REST API
+                        const ApiStatusBadge(isCompact: true),
+                        const SizedBox(width: 4),
                         IconButton(
                           onPressed: () {
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -141,6 +148,73 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ],
                 ),
+
+                // Notifikasi Konektivitas Offline / Tanpa Internet
+                if (network.hasNoInternet) ...[
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEF2F2),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFFECACA)),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.wifi_off_rounded, size: 20, color: AppTheme.dangerRed),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Perangkat Tidak Terhubung ke Internet',
+                                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF991B1B)),
+                              ),
+                              SizedBox(height: 2),
+                              Text(
+                                'Silakan hubungkan perangkat ke internet. Data yang ditampilkan saat ini adalah data tersimpan terakhir.',
+                                style: TextStyle(fontSize: 11, color: Color(0xFF7F1D1D), height: 1.3),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ] else if (network.isApiOffline) ...[
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFFBEB),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFFDE68A)),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.cloud_off_rounded, size: 20, color: AppTheme.amberWarning),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Server REST API Tidak Terjangkau (Mode Offline)',
+                                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF92400E)),
+                              ),
+                              SizedBox(height: 2),
+                              Text(
+                                'Koneksi internet aktif, namun backend perpustakaan belum dapat dihubungi. Menampilkan data lokal terakhir.',
+                                style: TextStyle(fontSize: 11, color: Color(0xFF78350F), height: 1.3),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 16),
 
                 // User Greeting Card
@@ -400,23 +474,31 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                   ),
                                   const SizedBox(height: 8),
-                                  Row(
+                                  Wrap(
+                                    alignment: WrapAlignment.spaceBetween,
+                                    crossAxisAlignment: WrapCrossAlignment.center,
+                                    spacing: 8,
+                                    runSpacing: 4,
                                     children: [
-                                      const Icon(
-                                        Icons.alarm_rounded,
-                                        size: 13,
-                                        color: AppTheme.amberWarning,
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(
+                                            Icons.alarm_rounded,
+                                            size: 13,
+                                            color: AppTheme.amberWarning,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            'Sisa ${activeLoan.sisaHari} hari lagi',
+                                            style: const TextStyle(
+                                              color: AppTheme.amberWarning,
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        'Sisa ${activeLoan.sisaHari} hari lagi',
-                                        style: const TextStyle(
-                                          color: AppTheme.amberWarning,
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      const Spacer(),
                                       Text(
                                         'Jatuh Tempo: ${activeLoan.tanggalJatuhTempo}',
                                         style: TextStyle(
@@ -446,8 +528,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         const SizedBox(height: 10),
 
                         // Footer Row
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        Wrap(
+                          alignment: WrapAlignment.spaceBetween,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 8,
+                          runSpacing: 4,
                           children: [
                             Text(
                               'Dipinjam: ${activeLoan.tanggalPinjam}',
@@ -459,6 +544,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             InkWell(
                               onTap: () => widget.onNavigateTab?.call(2),
                               child: const Row(
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(
                                     'Perpanjang Pinjaman',
@@ -569,7 +655,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 // Popular Books Horizontal List
                 SizedBox(
-                  height: 275,
+                  height: 290,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: bukuProv.popularBooks.length,
@@ -626,7 +712,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   physics: const NeverScrollableScrollPhysics(),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
-                    childAspectRatio: 0.68,
+                    childAspectRatio: 0.64,
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
                   ),

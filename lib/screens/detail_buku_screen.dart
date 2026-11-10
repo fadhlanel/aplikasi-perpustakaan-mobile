@@ -188,7 +188,10 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
+                            Wrap(
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: 8,
+                              runSpacing: 4,
                               children: [
                                 Text(
                                   '${buku.stokTersedia} dari ${buku.stok} Buku',
@@ -198,7 +201,6 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
                                     color: AppTheme.textDark,
                                   ),
                                 ),
-                                const SizedBox(width: 8),
                                 const CustomBadge(
                                   label: 'Tersedia',
                                   type: BadgeType.tersedia,
@@ -506,14 +508,10 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 10,
-              childAspectRatio: 2.7,
-              children: const [
+            const Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
                 _FeaturePill(text: 'Dart SDK 3.x & Flutter 3.10+'),
                 _FeaturePill(text: 'State Management Modern'),
                 _FeaturePill(text: 'Integrasi Backend REST & GraphQL'),
@@ -762,26 +760,23 @@ class _FeaturePill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
         color: const Color(0xFFF0FDF4),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: const Color(0xFFDCFCE7)),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           const Icon(Icons.check_circle_rounded, size: 14, color: AppTheme.mintGreen),
           const SizedBox(width: 6),
-          Expanded(
-            child: Text(
-              text,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 10.5,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF166534),
-              ),
+          Text(
+            text,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF166534),
             ),
           ),
         ],

@@ -1,11 +1,33 @@
 import 'package:flutter/foundation.dart';
 import '../core/api_client.dart';
+import '../core/offline_cache.dart';
 import '../models/buku.dart';
 import '../models/peminjaman.dart';
 
 class PinjamanProvider extends ChangeNotifier {
   PinjamanProvider() {
     _initDefaultLoans();
+    _loadFromCache();
+  }
+
+  Future<void> _loadFromCache() async {
+    try {
+      final cached = await OfflineCache.getLoans();
+      if (cached != null) {
+        final list = cached['data'];
+        if (list is List && list.isNotEmpty) {
+          final parsed = list
+              .whereType<Map<String, dynamic>>()
+              .map(Peminjaman.fromJson)
+              .toList();
+          final active = parsed.where((p) => !p.sudahDikembalikan).toList();
+          final returned = parsed.where((p) => p.sudahDikembalikan).toList();
+          if (active.isNotEmpty) activeLoans = active;
+          if (returned.isNotEmpty) historyLoans = [...returned, ...historyLoans];
+          notifyListeners();
+        }
+      }
+    } catch (_) {}
   }
 
   int selectedTab = 0; // 0: Sedang Dipinjam, 1: Riwayat Selesai, 2: Denda & Telat
@@ -194,8 +216,12 @@ class PinjamanProvider extends ChangeNotifier {
 
         if (active.isNotEmpty) activeLoans = active;
         if (returned.isNotEmpty) historyLoans = [...returned, ...historyLoans];
+        await OfflineCache.saveLoans(res);
         notifyListeners();
       }
-    } catch (_) {}
+    } catch (_) {
+      // Fallback offline: muat data peminjaman terakhir
+      await _loadFromCache();
+    }
   }
 }

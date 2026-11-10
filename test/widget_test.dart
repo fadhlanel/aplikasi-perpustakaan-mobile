@@ -2,20 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
-import 'package:anodor/core/app_theme.dart';
-import 'package:anodor/providers/auth_provider.dart';
-import 'package:anodor/providers/buku_provider.dart';
-import 'package:anodor/providers/pinjaman_provider.dart';
-import 'package:anodor/screens/detail_buku_screen.dart';
-import 'package:anodor/screens/home_screen.dart';
-import 'package:anodor/screens/login_screen.dart';
-import 'package:anodor/screens/pinjaman_screen.dart';
-import 'package:anodor/screens/profil_screen.dart';
-import 'package:anodor/screens/splash_screen.dart';
+import 'package:pustaka_digital/core/app_theme.dart';
+import 'package:pustaka_digital/core/network_service.dart';
+import 'package:pustaka_digital/providers/auth_provider.dart';
+import 'package:pustaka_digital/providers/buku_provider.dart';
+import 'package:pustaka_digital/providers/pinjaman_provider.dart';
+import 'package:pustaka_digital/screens/detail_buku_screen.dart';
+import 'package:pustaka_digital/screens/home_screen.dart';
+import 'package:pustaka_digital/screens/login_screen.dart';
+import 'package:pustaka_digital/screens/pinjaman_screen.dart';
+import 'package:pustaka_digital/screens/profil_screen.dart';
+import 'package:pustaka_digital/screens/splash_screen.dart';
 
 Widget createTestApp(Widget child) {
   return MultiProvider(
     providers: [
+      ChangeNotifierProvider(create: (_) => NetworkService()),
       ChangeNotifierProvider(create: (_) => AuthProvider()),
       ChangeNotifierProvider(create: (_) => BukuProvider()),
       ChangeNotifierProvider(create: (_) => PinjamanProvider()),
@@ -33,16 +35,17 @@ void main() {
 
     expect(find.text('Pustaka Digital'), findsOneWidget);
     expect(find.text('Sistem Perpustakaan Pintar SMK / SMA'), findsOneWidget);
-    expect(find.text('SMK Negeri 1 Surabaya  •'), findsOneWidget);
+    expect(find.text('SMK Negeri 1 Surabaya'), findsOneWidget);
   });
 
   testWidgets('Layar 2: Login screen menampilkan form NIS, PIN, dan tombol Masuk', (tester) async {
     await tester.pumpWidget(createTestApp(const LoginScreen()));
 
-    expect(find.text('Login atau Daftar!'), findsOneWidget);
-    expect(find.text('NIS / ID Anggota'), findsOneWidget);
-    expect(find.text('Password / PIN Perpustakaan'), findsOneWidget);
+    expect(find.text('Login Siswa'), findsOneWidget);
+    expect(find.text('Nomor Induk Siswa (NIS)'), findsOneWidget);
+    expect(find.text('Password / PIN Keanggotaan'), findsOneWidget);
     expect(find.text('Masuk'), findsOneWidget);
+    expect(find.text('Masuk Cepat dengan Akun Siswa Demo'), findsOneWidget);
   });
 
   testWidgets('Layar 3: Home screen menampilkan sapaan siswa, status pinjaman, & kategori', (tester) async {
@@ -52,6 +55,7 @@ void main() {
     expect(find.text('STATUS PEMINJAMAN ANDA'), findsOneWidget);
     expect(find.text('Kategori Buku'), findsOneWidget);
     expect(find.text('Rekomendasi Terpopuler'), findsOneWidget);
+    expect(find.text('API Terhubung'), findsOneWidget);
   });
 
   testWidgets('Layar 4: Detail buku screen menampilkan ketersediaan, lokasi rak, & reservasi', (tester) async {
@@ -72,11 +76,12 @@ void main() {
     expect(find.text('Ajukan Perpanjangan Waktu (+7 Hari)'), findsOneWidget);
   });
 
-  testWidgets('Layar 6: Profil screen menampilkan identitas siswa, 3 statistik, & keluar akun', (tester) async {
+  testWidgets('Layar 6: Profil screen menampilkan identitas siswa, 3 statistik, menu aktivitas & keluar akun', (tester) async {
     await tester.pumpWidget(createTestApp(const ProfilScreen()));
 
     expect(find.text('Profil Siswa'), findsOneWidget);
-    expect(find.text('ANGGOTA TERVERIFIKASI'), findsOneWidget);
+    expect(find.text('Buku Favorit & Bookmark'), findsOneWidget);
+    expect(find.text('Pengaturan Tema & Akun'), findsOneWidget);
     expect(find.text('Keluar Akun'), findsOneWidget);
   });
 }

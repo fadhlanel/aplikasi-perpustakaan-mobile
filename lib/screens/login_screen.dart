@@ -7,7 +7,7 @@ import '../providers/auth_provider.dart';
 import 'main_navigation.dart';
 
 /// Screen 2: Login Screen
-/// Sesuai 100% dengan Mockup Desain Figma (Foto 1)
+/// Sesuai Desain Figma (Foto 1) dengan layout responsif
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -17,8 +17,8 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nisController = TextEditingController(text: AppConstants.defaultNis);
-  final _pinController = TextEditingController(text: AppConstants.defaultPin);
+  final _nisController = TextEditingController();
+  final _pinController = TextEditingController();
 
   bool _obscurePassword = true;
   bool _rememberMe = true;
@@ -74,7 +74,10 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 // Background Image / Gradient Room
                 Container(
-                  height: size.height * 0.36,
+                  constraints: BoxConstraints(
+                    minHeight: 250,
+                    maxHeight: (size.height * 0.38).clamp(250.0, 320.0),
+                  ),
                   width: double.infinity,
                   decoration: const BoxDecoration(
                     gradient: LinearGradient(
@@ -180,7 +183,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               height: 1.35,
                             ),
                           ),
-                          const SizedBox(height: 14),
                         ],
                       ),
                     ),
@@ -204,7 +206,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     // Heading
                     const Center(
                       child: Text(
-                        'Login atau Daftar!',
+                        'Login Siswa',
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -212,70 +214,35 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 20),
-
-                    // Active Tab Indicator Pill
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: AppTheme.softBlueBackground,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Row(
-                        children: [
-                          Icon(
-                            Icons.badge_rounded,
-                            color: AppTheme.primaryNavy,
-                            size: 20,
-                          ),
-                          SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              'Masuk dengan NIS atau Nomor Anggota',
-                              style: TextStyle(
-                                color: AppTheme.primaryNavy,
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
+                    const SizedBox(height: 6),
+                    const Center(
+                      child: Text(
+                        'Masukkan NIS dan PIN perpustakaan Anda',
+                        style: TextStyle(fontSize: 13, color: AppTheme.textMuted),
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 28),
 
-                    // Input 1: NIS / ID Anggota
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'NIS / ID Anggota',
-                          style: TextStyle(
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.textDark,
-                          ),
-                        ),
-                        Text(
-                          'Contoh: 202410882',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade500,
-                          ),
-                        ),
-                      ],
+                    // NIS Input Label
+                    const Text(
+                      'Nomor Induk Siswa (NIS)',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textDark,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _nisController,
-                      decoration: InputDecoration(
-                        hintText: 'Masukkan NIS / Email Siswa',
-                        prefixIcon: const Icon(
-                          Icons.perm_identity_rounded,
+                      keyboardType: TextInputType.text,
+                      decoration: const InputDecoration(
+                        hintText: 'Contoh: 2122.10.490',
+                        prefixIcon: Icon(
+                          Icons.badge_outlined,
                           color: AppTheme.textMuted,
                         ),
-                        fillColor: const Color(0xFFF8FAFC),
+                        fillColor: Color(0xFFF8FAFC),
                       ),
                       validator: (val) {
                         if (val == null || val.trim().isEmpty) {
@@ -284,13 +251,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         return null;
                       },
                     ),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 20),
 
-                    // Input 2: Password / PIN
+                    // Password / PIN Label
                     const Text(
-                      'Password / PIN Perpustakaan',
+                      'Password / PIN Keanggotaan',
                       style: TextStyle(
-                        fontSize: 13.5,
+                        fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: AppTheme.textDark,
                       ),
@@ -364,7 +331,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             );
                           },
                           child: const Text(
-                            'Lupa PIN / Butuh Bantuan?',
+                            'Lupa PIN?',
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
@@ -411,6 +378,27 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                 ],
                               ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Demo Account Shortcut
+                    Center(
+                      child: TextButton.icon(
+                        onPressed: () {
+                          _nisController.text = AppConstants.defaultNis;
+                          _pinController.text = AppConstants.defaultPin;
+                          _handleLogin();
+                        },
+                        icon: const Icon(Icons.flash_on_rounded, size: 16, color: AppTheme.accentBlue),
+                        label: const Text(
+                          'Masuk Cepat dengan Akun Siswa Demo',
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.accentBlue,
+                          ),
+                        ),
                       ),
                     ),
                   ],
