@@ -672,12 +672,24 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
     AuthProvider auth,
     PinjamanProvider pinjamanProv,
   ) async {
+    final selectedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 30)),
+      helpText: 'Pilih tanggal ambil buku',
+      cancelText: 'Batal',
+      confirmText: 'Pilih',
+    );
+    if (selectedDate == null || !mounted) return;
+
     setState(() => _isPinjamLoading = true);
 
     await pinjamanProv.pinjamBuku(
       buku: buku,
       nis: auth.profile.nis,
       nama: auth.profile.nama,
+      tanggalAmbil: '${selectedDate.day.toString().padLeft(2, '0')}/${selectedDate.month.toString().padLeft(2, '0')}/${selectedDate.year}',
     );
 
     if (!mounted || !context.mounted) return;
@@ -691,12 +703,20 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
           children: [
             Icon(Icons.check_circle_rounded, color: AppTheme.mintGreen, size: 28),
             SizedBox(width: 10),
-            Text('Reservasi Berhasil'),
+            Expanded(
+              child: Text(
+                'Reservasi Berhasil',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
         content: Text(
           'Buku "${buku.judul}" berhasil direservasi atas nama ${auth.profile.nama}. '
-          'Silakan ambil fisik buku di ${buku.lokasiRak} dalam 1x24 jam.',
+          'Tanggal ambil: ${selectedDate.day.toString().padLeft(2, '0')}/${selectedDate.month.toString().padLeft(2, '0')}/${selectedDate.year}. '
+          'Lokasi: ${buku.lokasiRak}.'
+          ,
           style: const TextStyle(fontSize: 13, height: 1.4),
         ),
         actions: [

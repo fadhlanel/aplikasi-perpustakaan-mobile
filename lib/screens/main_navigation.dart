@@ -46,7 +46,7 @@ class _MainNavigationState extends State<MainNavigation> {
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           border: Border(
             top: BorderSide(color: Colors.grey.shade200, width: 1),
           ),

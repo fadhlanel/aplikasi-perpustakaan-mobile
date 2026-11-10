@@ -148,6 +148,7 @@ class PinjamanProvider extends ChangeNotifier {
     required Buku buku,
     required String nis,
     required String nama,
+    String? tanggalAmbil,
   }) async {
     loading = true;
     notifyListeners();
@@ -173,7 +174,7 @@ class PinjamanProvider extends ChangeNotifier {
       kategoriNama: 'Informatika / ${buku.namaKategori}',
       lokasiRak: buku.lokasiRak,
       tanggalPinjam: 'Hari ini',
-      tanggalJatuhTempo: '7 Hari ke depan',
+      tanggalJatuhTempo: tanggalAmbil ?? '7 Hari ke depan',
       status: 'dipinjam',
       sisaHari: 7,
       hariBerjalan: 0,

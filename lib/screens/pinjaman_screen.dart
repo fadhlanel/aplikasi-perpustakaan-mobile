@@ -26,6 +26,15 @@ class _PinjamanScreenState extends State<PinjamanScreen> {
     });
   }
 
+  String _nextDueDate(Peminjaman loan) {
+    final match = RegExp(r'^(\d{1,2}) (\w+) (\d{4})').firstMatch(loan.tanggalJatuhTempo);
+    if (match == null) return '7 hari setelah tanggal jatuh tempo saat ini';
+    const months = <String>['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    const monthNumbers = <String, int>{'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'Mei': 5, 'Jun': 6, 'Jul': 7, 'Agu': 8, 'Sep': 9, 'Okt': 10, 'Nov': 11, 'Des': 12};
+    final date = DateTime(int.parse(match.group(3)!), monthNumbers[match.group(2)] ?? 1, int.parse(match.group(1)!)).add(const Duration(days: 7));
+    return '${date.day.toString().padLeft(2, '0')} ${months[date.month - 1]} ${date.year}';
+  }
+
   void _handlePerpanjang(Peminjaman loan, PinjamanProvider provider) {
     if (!loan.bisaPerpanjang) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -47,7 +56,7 @@ class _PinjamanScreenState extends State<PinjamanScreen> {
         ),
         content: Text(
           'Ajukan penambahan durasi pinjam selama +7 hari untuk buku "${loan.judulBuku}". '
-          'Batas kembali baru: 02 Nov 2024.',
+          'Batas kembali baru: ${_nextDueDate(loan)}.',
           style: const TextStyle(fontSize: 13, height: 1.4),
         ),
         actions: [
