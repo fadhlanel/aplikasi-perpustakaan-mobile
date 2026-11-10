@@ -13,6 +13,7 @@ class AuthProvider extends ChangeNotifier {
   static const String _keyNis = 'student_nis';
   static const String _keyName = 'student_name';
   static const String _keyKelas = 'student_kelas';
+  static const String _keyPin = 'student_pin';
 
   bool _isLoggedIn = false; // Default false saat baru install, harus login
   bool _isLoading = true;
@@ -66,6 +67,21 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> changePin(String oldPin, String newPin) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final currentPin = prefs.getString(_keyPin) ?? AppConstants.defaultPin;
+      if (oldPin.trim() != currentPin) {
+        return false;
+      }
+      await prefs.setString(_keyPin, newPin.trim());
+      notifyListeners();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<bool> login({
     required String nis,
     required String pin,
@@ -76,12 +92,23 @@ class AuthProvider extends ChangeNotifier {
 
     await Future.delayed(const Duration(milliseconds: 600));
 
-    // Validasi input sederhana
+    // Validasi input
     if (nis.trim().isEmpty) {
       _isLoading = false;
       notifyListeners();
       return false;
     }
+
+    // Validasi PIN
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final validPin = prefs.getString(_keyPin) ?? AppConstants.defaultPin;
+      if (pin.trim() != validPin) {
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+    } catch (_) {}
 
     _isLoggedIn = true;
     final isDemoAccount = nis.trim() == AppConstants.defaultNis;

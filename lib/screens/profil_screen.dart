@@ -4,7 +4,9 @@ import 'package:provider/provider.dart';
 import '../core/app_constants.dart';
 import '../core/app_theme.dart';
 import '../core/offline_cache.dart';
+import '../core/theme_provider.dart';
 import '../models/buku.dart';
+import '../models/peminjaman.dart';
 import '../providers/auth_provider.dart';
 import '../providers/buku_provider.dart';
 import '../providers/pinjaman_provider.dart';
@@ -489,6 +491,173 @@ class ProfilScreen extends StatelessWidget {
     );
   }
 
+  void _showChangePinDialog(BuildContext context, AuthProvider auth) {
+    final oldPinController = TextEditingController();
+    final newPinController = TextEditingController();
+    final confirmPinController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    bool obscureOld = true;
+    bool obscureNew = true;
+    bool obscureConfirm = true;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        final isDark = Theme.of(ctx).brightness == Brightness.dark;
+        return StatefulBuilder(
+          builder: (dialogCtx, setSheetState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 16,
+                bottom: MediaQuery.of(dialogCtx).viewInsets.bottom + 20,
+              ),
+              child: Form(
+                key: formKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade400,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          const Icon(Icons.lock_reset_rounded, color: AppTheme.accentBlue, size: 22),
+                          const SizedBox(width: 10),
+                          Text(
+                            'Ganti PIN / Kata Sandi',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? AppTheme.darkTextPrimary : AppTheme.textDark,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        'Masukkan PIN lama Anda dan tentukan 6 digit PIN baru untuk keamanan akun.',
+                        style: TextStyle(fontSize: 12, color: AppTheme.textMuted),
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: oldPinController,
+                        obscureText: obscureOld,
+                        keyboardType: TextInputType.number,
+                        maxLength: 6,
+                        decoration: InputDecoration(
+                          labelText: 'PIN Lama',
+                          counterText: '',
+                          prefixIcon: const Icon(Icons.lock_outline_rounded),
+                          suffixIcon: IconButton(
+                            icon: Icon(obscureOld ? Icons.visibility_off : Icons.visibility),
+                            onPressed: () => setSheetState(() => obscureOld = !obscureOld),
+                          ),
+                        ),
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) return 'PIN lama wajib diisi';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: newPinController,
+                        obscureText: obscureNew,
+                        keyboardType: TextInputType.number,
+                        maxLength: 6,
+                        decoration: InputDecoration(
+                          labelText: 'PIN Baru (6 Digit Angka)',
+                          counterText: '',
+                          prefixIcon: const Icon(Icons.password_rounded),
+                          suffixIcon: IconButton(
+                            icon: Icon(obscureNew ? Icons.visibility_off : Icons.visibility),
+                            onPressed: () => setSheetState(() => obscureNew = !obscureNew),
+                          ),
+                        ),
+                        validator: (v) {
+                          if (v == null || v.trim().length != 6) return 'PIN baru harus 6 digit angka';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: confirmPinController,
+                        obscureText: obscureConfirm,
+                        keyboardType: TextInputType.number,
+                        maxLength: 6,
+                        decoration: InputDecoration(
+                          labelText: 'Konfirmasi PIN Baru',
+                          counterText: '',
+                          prefixIcon: const Icon(Icons.check_circle_outline_rounded),
+                          suffixIcon: IconButton(
+                            icon: Icon(obscureConfirm ? Icons.visibility_off : Icons.visibility),
+                            onPressed: () => setSheetState(() => obscureConfirm = !obscureConfirm),
+                          ),
+                        ),
+                        validator: (v) {
+                          if (v != newPinController.text) return 'Konfirmasi PIN tidak cocok';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            if (!formKey.currentState!.validate()) return;
+                            final success = await auth.changePin(
+                              oldPinController.text,
+                              newPinController.text,
+                            );
+                            if (ctx.mounted) Navigator.of(ctx).pop();
+                            if (context.mounted) {
+                              if (success) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('PIN berhasil diperbarui! Silakan gunakan PIN baru untuk login selanjutnya.'),
+                                    backgroundColor: Color(0xFF047857),
+                                  ),
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Gagal mengubah PIN. PIN lama yang Anda masukkan salah.'),
+                                    backgroundColor: AppTheme.dangerRed,
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                          child: const Text('Simpan PIN Baru', style: TextStyle(fontWeight: FontWeight.bold)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   // 4. Bottom Sheet: Pengaturan Tema & Akun
   void _showAccountSettingsSheet(BuildContext context, AuthProvider auth) {
     showModalBottomSheet(
@@ -497,92 +666,124 @@ class ProfilScreen extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (ctx) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 18),
-                const Row(
+        return Consumer<ThemeProvider>(
+          builder: (context, themeProv, _) {
+            final isDark = themeProv.isDark;
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.tune_rounded, color: AppTheme.accentBlue, size: 22),
-                    SizedBox(width: 10),
-                    Text(
-                      'Pengaturan Tema & Akun',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textDark),
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade400,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    Row(
+                      children: [
+                        const Icon(Icons.tune_rounded, color: AppTheme.accentBlue, size: 22),
+                        const SizedBox(width: 10),
+                        Text(
+                          'Pengaturan Tema & Akun',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? AppTheme.darkTextPrimary : AppTheme.textDark,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.lock_reset_rounded, color: AppTheme.primaryNavy),
+                      title: Text(
+                        'Ganti PIN / Kata Sandi',
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? AppTheme.darkTextPrimary : AppTheme.textDark,
+                        ),
+                      ),
+                      subtitle: const Text('Perbarui kode sandi login keanggotaan Anda', style: TextStyle(fontSize: 11, color: AppTheme.textMuted)),
+                      trailing: const Icon(Icons.chevron_right_rounded, color: AppTheme.textSubtle),
+                      onTap: () {
+                        Navigator.of(ctx).pop();
+                        _showChangePinDialog(context, auth);
+                      },
+                    ),
+                    const Divider(height: 1),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      secondary: Icon(
+                        isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                        color: isDark ? AppTheme.cyanAccent : AppTheme.accentBlue,
+                      ),
+                      title: Text(
+                        'Tema Tampilan',
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? AppTheme.darkTextPrimary : AppTheme.textDark,
+                        ),
+                      ),
+                      subtitle: Text(
+                        isDark ? 'Mode Gelap Aktif (Dark Mode)' : 'Mode Terang Aktif (Light Mode)',
+                        style: const TextStyle(fontSize: 11, color: AppTheme.textMuted),
+                      ),
+                      value: isDark,
+                      activeColor: AppTheme.cyanAccent,
+                      onChanged: (val) {
+                        themeProv.setDark(val);
+                      },
+                    ),
+                    const Divider(height: 1),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.cleaning_services_rounded, color: AppTheme.amberWarning),
+                      title: Text(
+                        'Hapus Cache Data Offline',
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? AppTheme.darkTextPrimary : AppTheme.textDark,
+                        ),
+                      ),
+                      subtitle: const Text('Bersihkan data tersimpan lokal jika ada pembaruan', style: TextStyle(fontSize: 11, color: AppTheme.textMuted)),
+                      trailing: const Icon(Icons.chevron_right_rounded, color: AppTheme.textSubtle),
+                      onTap: () async {
+                        Navigator.of(ctx).pop();
+                        await OfflineCache.clearCache();
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Cache offline berhasil dibersihkan.'),
+                              backgroundColor: Color(0xFF047857),
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    Center(
+                      child: Text(
+                        'Pustaka Digital v1.0.0 (Build 1) • SMK Negeri 1 Surabaya',
+                        style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                      ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.lock_reset_rounded, color: AppTheme.primaryNavy),
-                  title: const Text('Ganti PIN / Kata Sandi', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
-                  subtitle: const Text('Perbarui kode sandi login keanggotaan Anda', style: TextStyle(fontSize: 11, color: AppTheme.textMuted)),
-                  trailing: const Icon(Icons.chevron_right_rounded, color: AppTheme.textSubtle),
-                  onTap: () {
-                    Navigator.of(ctx).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Fitur penggantian PIN dapat dilakukan melalui admin sirkulasi.')),
-                    );
-                  },
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.palette_outlined, color: AppTheme.primaryNavy),
-                  title: const Text('Tema Tampilan', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
-                  subtitle: const Text('Mode Terang (Sesuai Desain Figma)', style: TextStyle(fontSize: 11, color: AppTheme.textMuted)),
-                  trailing: const Icon(Icons.chevron_right_rounded, color: AppTheme.textSubtle),
-                  onTap: () {
-                    Navigator.of(ctx).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Tema Terang aktif secara default.')),
-                    );
-                  },
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.cleaning_services_rounded, color: AppTheme.amberWarning),
-                  title: const Text('Hapus Cache Data Offline', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
-                  subtitle: const Text('Bersihkan data tersimpan lokal jika ada pembaruan', style: TextStyle(fontSize: 11, color: AppTheme.textMuted)),
-                  trailing: const Icon(Icons.chevron_right_rounded, color: AppTheme.textSubtle),
-                  onTap: () async {
-                    Navigator.of(ctx).pop();
-                    await OfflineCache.clearCache();
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Cache offline berhasil dibersihkan.'),
-                          backgroundColor: Color(0xFF047857),
-                        ),
-                      );
-                    }
-                  },
-                ),
-                const SizedBox(height: 12),
-                Center(
-                  child: Text(
-                    'Pustaka Digital v1.0.0 (Build 1) • SMK Negeri 1 Surabaya',
-                    style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
-                  ),
-                ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
     );
@@ -783,10 +984,15 @@ class ProfilScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    final pinjaman = context.watch<PinjamanProvider>();
+    final themeProv = context.watch<ThemeProvider>();
+    final isDark = themeProv.isDark;
     final profile = auth.profile;
+    final activeLoans = pinjaman.activeLoans;
+    final activeLoan = activeLoans.isNotEmpty ? activeLoans.first : null;
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: isDark ? AppTheme.darkBackground : AppTheme.background,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -803,7 +1009,7 @@ class ProfilScreen extends StatelessWidget {
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: AppTheme.softBlueBackground,
+                          color: isDark ? const Color(0xFF1E3A8A).withValues(alpha: 0.3) : AppTheme.softBlueBackground,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(
@@ -813,10 +1019,10 @@ class ProfilScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 10),
-                      const Column(
+                      Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                          const Text(
                             'PUSTAKADIGITAL',
                             style: TextStyle(
                               fontSize: 10,
@@ -830,7 +1036,7 @@ class ProfilScreen extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: AppTheme.textDark,
+                              color: isDark ? AppTheme.darkTextPrimary : AppTheme.textDark,
                             ),
                           ),
                         ],
@@ -858,9 +1064,9 @@ class ProfilScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppTheme.softBlueBackground,
+                  color: isDark ? AppTheme.darkSurface : AppTheme.softBlueBackground,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFFDCEBFA)),
+                  border: Border.all(color: isDark ? AppTheme.darkBorder : const Color(0xFFDCEBFA)),
                 ),
                 child: Row(
                   children: [
@@ -873,12 +1079,12 @@ class ProfilScreen extends StatelessWidget {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: AppTheme.primaryNavy.withValues(alpha: 0.1),
-                            border: Border.all(color: Colors.white, width: 2.5),
+                            border: Border.all(color: isDark ? AppTheme.darkBorder : Colors.white, width: 2.5),
                           ),
                           child: const Icon(
                             Icons.person_rounded,
                             size: 40,
-                            color: AppTheme.primaryNavy,
+                            color: AppTheme.cyanAccent,
                           ),
                         ),
                         Positioned(
@@ -886,8 +1092,8 @@ class ProfilScreen extends StatelessWidget {
                           right: 0,
                           child: Container(
                             padding: const EdgeInsets.all(2),
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
+                            decoration: BoxDecoration(
+                              color: isDark ? AppTheme.darkSurface : Colors.white,
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
@@ -931,10 +1137,10 @@ class ProfilScreen extends StatelessWidget {
                             profile.nama,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: AppTheme.textDark,
+                              color: isDark ? AppTheme.darkTextPrimary : AppTheme.textDark,
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -954,11 +1160,11 @@ class ProfilScreen extends StatelessWidget {
                               Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(Icons.school_outlined, size: 13, color: AppTheme.primaryNavy),
+                                  Icon(Icons.school_outlined, size: 13, color: isDark ? AppTheme.cyanAccent : AppTheme.primaryNavy),
                                   const SizedBox(width: 4),
                                   Text(
                                     profile.sekolah,
-                                    style: const TextStyle(fontSize: 11, color: AppTheme.textDark, fontWeight: FontWeight.w500),
+                                    style: TextStyle(fontSize: 11, color: isDark ? AppTheme.darkTextPrimary : AppTheme.textDark, fontWeight: FontWeight.w500),
                                   ),
                                 ],
                               ),
@@ -1004,16 +1210,18 @@ class ProfilScreen extends StatelessWidget {
                       label: 'Buku Pernah\nDibaca',
                       iconBg: const Color(0xFFEFF6FF),
                       iconColor: AppTheme.accentBlue,
+                      isDark: isDark,
                     ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: _buildStatCard(
                       icon: Icons.calendar_month_rounded,
-                      value: '${profile.bukuAktifCount}',
+                      value: '${activeLoans.length}',
                       label: 'Buku Sedang\nAktif',
                       iconBg: const Color(0xFFECFDF5),
                       iconColor: AppTheme.mintGreen,
+                      isDark: isDark,
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -1022,99 +1230,152 @@ class ProfilScreen extends StatelessWidget {
                       icon: Icons.shield_outlined,
                       value: '${profile.dendaCount}',
                       label: 'Denda &\nSanksi',
-                      iconBg: const Color(0xFFF8FAFC),
-                      iconColor: AppTheme.primaryNavy,
+                      iconBg: isDark ? const Color(0xFF334155) : const Color(0xFFF8FAFC),
+                      iconColor: isDark ? AppTheme.cyanAccent : AppTheme.primaryNavy,
+                      isDark: isDark,
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
 
-              // Active Loan Reminder Card
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFEEF2F6)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.03),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    const BookCoverWidget(
-                      judul: 'Clean Code & Architecture',
-                      penulis: 'Robert C. Martin',
-                      width: 44,
-                      height: 60,
-                      borderRadius: 6,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                width: 7,
-                                height: 7,
-                                decoration: const BoxDecoration(
-                                  color: AppTheme.mintGreen,
-                                  shape: BoxShape.circle,
+              // Active Loan Reminder Card (Dynamic from PinjamanProvider)
+              if (activeLoan != null) ...[
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppTheme.darkSurface : Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: isDark ? AppTheme.darkBorder : const Color(0xFFEEF2F6)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      BookCoverWidget(
+                        judul: activeLoan.judulBuku,
+                        penulis: activeLoan.pengarang,
+                        coverUrl: activeLoan.sampul,
+                        width: 44,
+                        height: 60,
+                        borderRadius: 6,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  width: 7,
+                                  height: 7,
+                                  decoration: BoxDecoration(
+                                    color: activeLoan.sisaHari <= 0
+                                        ? AppTheme.dangerRed
+                                        : (activeLoan.sisaHari <= 2 ? AppTheme.amberWarning : AppTheme.mintGreen),
+                                    shape: BoxShape.circle,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 6),
-                              const Text(
-                                'Tenggat 3 Hari Lagi',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF047857),
+                                const SizedBox(width: 6),
+                                Text(
+                                  activeLoan.sisaHari > 0
+                                      ? 'Tenggat ${activeLoan.sisaHari} Hari Lagi'
+                                      : (activeLoan.sisaHari == 0 ? 'Jatuh Tempo Hari Ini!' : 'Terlambat ${activeLoan.sisaHari.abs()} Hari!'),
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: activeLoan.sisaHari <= 0
+                                        ? AppTheme.dangerRed
+                                        : (activeLoan.sisaHari <= 2 ? AppTheme.amberWarning : const Color(0xFF047857)),
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 2),
-                          const Text(
-                            'Clean Code & Architecture',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.textDark,
+                              ],
                             ),
-                          ),
-                          const SizedBox(height: 2),
-                          const Text(
-                            'Kembalikan s.d. 28 Okt 2024',
-                            style: TextStyle(fontSize: 11, color: AppTheme.textMuted),
-                          ),
-                        ],
+                            const SizedBox(height: 2),
+                            Text(
+                              activeLoan.judulBuku,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? AppTheme.darkTextPrimary : AppTheme.textDark,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Kembalikan s.d. ${activeLoan.tanggalJatuhTempo}',
+                              style: const TextStyle(fontSize: 11, color: AppTheme.textMuted),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    Container(
-                      width: 34,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        color: AppTheme.softBlueBackground,
-                        borderRadius: BorderRadius.circular(10),
+                      Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF1E3A8A).withValues(alpha: 0.3) : AppTheme.softBlueBackground,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(
+                          Icons.arrow_forward_rounded,
+                          color: AppTheme.accentBlue,
+                          size: 18,
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.arrow_forward_rounded,
-                        color: AppTheme.accentBlue,
-                        size: 18,
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
+              ] else ...[
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppTheme.darkSurface : Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: isDark ? AppTheme.darkBorder : const Color(0xFFEEF2F6)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF064E3B) : const Color(0xFFECFDF5),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.check_circle_outline_rounded, color: AppTheme.mintGreen, size: 24),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Tidak Ada Pinjaman Aktif',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? AppTheme.darkTextPrimary : AppTheme.textDark,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            const Text(
+                              'Semua buku telah dikembalikan tepat waktu.',
+                              style: TextStyle(fontSize: 11, color: AppTheme.textMuted),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: 22),
 
               // Section: AKTIVITAS & PREFERENSI
@@ -1130,9 +1391,9 @@ class ProfilScreen extends StatelessWidget {
               const SizedBox(height: 8),
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: isDark ? AppTheme.darkSurface : Colors.white,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFEEF2F6)),
+                  border: Border.all(color: isDark ? AppTheme.darkBorder : const Color(0xFFEEF2F6)),
                 ),
                 child: Column(
                   children: [
@@ -1143,8 +1404,9 @@ class ProfilScreen extends StatelessWidget {
                       iconBg: const Color(0xFFEFF6FF),
                       iconColor: AppTheme.accentBlue,
                       onTap: () => _showBookmarkSheet(context),
+                      isDark: isDark,
                     ),
-                    const Divider(height: 1, indent: 60),
+                    Divider(height: 1, indent: 60, color: isDark ? AppTheme.darkBorder : null),
                     _buildMenuItem(
                       icon: Icons.notifications_none_rounded,
                       title: 'Notifikasi Pengingat Pengembalian',
@@ -1152,8 +1414,9 @@ class ProfilScreen extends StatelessWidget {
                       iconBg: const Color(0xFFEFF6FF),
                       iconColor: AppTheme.accentBlue,
                       onTap: () => _showNotificationSettingsSheet(context),
+                      isDark: isDark,
                     ),
-                    const Divider(height: 1, indent: 60),
+                    Divider(height: 1, indent: 60, color: isDark ? AppTheme.darkBorder : null),
                     _buildMenuItem(
                       icon: Icons.qr_code_scanner_rounded,
                       title: 'Riwayat Kunjungan Perpustakaan',
@@ -1161,6 +1424,7 @@ class ProfilScreen extends StatelessWidget {
                       iconBg: const Color(0xFFEFF6FF),
                       iconColor: AppTheme.accentBlue,
                       onTap: () => _showVisitHistorySheet(context),
+                      isDark: isDark,
                     ),
                   ],
                 ),
@@ -1180,9 +1444,9 @@ class ProfilScreen extends StatelessWidget {
               const SizedBox(height: 8),
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: isDark ? AppTheme.darkSurface : Colors.white,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFEEF2F6)),
+                  border: Border.all(color: isDark ? AppTheme.darkBorder : const Color(0xFFEEF2F6)),
                 ),
                 child: Column(
                   children: [
@@ -1193,8 +1457,9 @@ class ProfilScreen extends StatelessWidget {
                       iconBg: const Color(0xFFEFF6FF),
                       iconColor: AppTheme.accentBlue,
                       onTap: () => _showAccountSettingsSheet(context, auth),
+                      isDark: isDark,
                     ),
-                    const Divider(height: 1, indent: 60),
+                    Divider(height: 1, indent: 60, color: isDark ? AppTheme.darkBorder : null),
                     _buildMenuItem(
                       icon: Icons.menu_book_outlined,
                       title: 'Panduan & Tata Tertib Perpustakaan',
@@ -1202,8 +1467,9 @@ class ProfilScreen extends StatelessWidget {
                       iconBg: const Color(0xFFEFF6FF),
                       iconColor: AppTheme.accentBlue,
                       onTap: () => _showRulesSheet(context),
+                      isDark: isDark,
                     ),
-                    const Divider(height: 1, indent: 60),
+                    Divider(height: 1, indent: 60, color: isDark ? AppTheme.darkBorder : null),
                     _buildMenuItem(
                       icon: Icons.headset_mic_outlined,
                       title: 'Hubungi Petugas Perpustakaan',
@@ -1211,6 +1477,7 @@ class ProfilScreen extends StatelessWidget {
                       iconBg: const Color(0xFFECFDF5),
                       iconColor: AppTheme.mintGreen,
                       onTap: () => _showContactSheet(context),
+                      isDark: isDark,
                     ),
                   ],
                 ),
@@ -1253,13 +1520,14 @@ class ProfilScreen extends StatelessWidget {
     required String label,
     required Color iconBg,
     required Color iconColor,
+    bool isDark = false,
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? AppTheme.darkSurface : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFEEF2F6)),
+        border: Border.all(color: isDark ? AppTheme.darkBorder : const Color(0xFFEEF2F6)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1275,10 +1543,10 @@ class ProfilScreen extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: AppTheme.textDark,
+              color: isDark ? AppTheme.darkTextPrimary : AppTheme.textDark,
             ),
           ),
           const SizedBox(height: 2),
@@ -1306,6 +1574,7 @@ class ProfilScreen extends StatelessWidget {
     required Color iconBg,
     required Color iconColor,
     VoidCallback? onTap,
+    bool isDark = false,
   }) {
     return Material(
       color: Colors.transparent,
@@ -1321,10 +1590,10 @@ class ProfilScreen extends StatelessWidget {
         ),
         title: Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 13.5,
             fontWeight: FontWeight.w600,
-            color: AppTheme.textDark,
+            color: isDark ? AppTheme.darkTextPrimary : AppTheme.textDark,
           ),
         ),
         subtitle: Text(

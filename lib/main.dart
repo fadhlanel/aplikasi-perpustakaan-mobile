@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'core/app_theme.dart';
 import 'core/network_service.dart';
+import 'core/theme_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/buku_provider.dart';
 import 'providers/pinjaman_provider.dart';
@@ -20,16 +21,23 @@ class PustakaDigitalApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => NetworkService()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => BukuProvider()),
         ChangeNotifierProvider(create: (_) => PinjamanProvider()),
       ],
-      child: MaterialApp(
-        title: 'Pustaka Digital',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.build(),
-        home: const SplashScreen(),
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, _) {
+          return MaterialApp(
+            title: 'Pustaka Digital',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.build(),
+            darkTheme: AppTheme.buildDark(),
+            themeMode: themeProvider.themeMode,
+            home: const SplashScreen(),
+          );
+        },
       ),
     );
   }

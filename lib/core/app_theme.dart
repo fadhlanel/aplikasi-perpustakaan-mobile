@@ -31,6 +31,14 @@ class AppTheme {
   static const Color textSubtle = Color(0xFF94A3B8);
   static const Color borderLight = Color(0xFFE2E8F0);
 
+  // Dark mode colors
+  static const Color darkBackground = Color(0xFF0F172A);
+  static const Color darkSurface = Color(0xFF1E293B);
+  static const Color darkCard = Color(0xFF1E293B);
+  static const Color darkBorder = Color(0xFF334155);
+  static const Color darkTextPrimary = Color(0xFFF1F5F9);
+  static const Color darkTextMuted = Color(0xFF94A3B8);
+
   static ThemeData build() {
     final colorScheme = ColorScheme.fromSeed(
       seedColor: primaryBlue,
@@ -96,6 +104,94 @@ class AppTheme {
           borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: primaryBlue, width: 1.5),
         ),
+      ),
+    );
+  }
+
+  static ThemeData buildDark() {
+    final colorScheme = ColorScheme.fromSeed(
+      seedColor: primaryBlue,
+      primary: const Color(0xFF60A5FA),
+      secondary: const Color(0xFF38BDF8),
+      surface: darkSurface,
+      brightness: Brightness.dark,
+    );
+
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: colorScheme,
+      scaffoldBackgroundColor: darkBackground,
+      fontFamily: 'Roboto',
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: false,
+        titleTextStyle: TextStyle(
+          color: darkTextPrimary,
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+        ),
+        iconTheme: IconThemeData(color: darkTextPrimary),
+      ),
+      cardTheme: CardThemeData(
+        color: darkCard,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: darkBorder),
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF1D4ED8),
+          foregroundColor: Colors.white,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          textStyle: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: darkSurface,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        hintStyle: const TextStyle(color: darkTextMuted, fontSize: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: darkBorder),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: darkBorder),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Color(0xFF60A5FA), width: 1.5),
+        ),
+      ),
+      dialogTheme: const DialogThemeData(
+        backgroundColor: darkSurface,
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: darkSurface,
+      ),
+      dividerColor: darkBorder,
+      listTileTheme: const ListTileThemeData(
+        textColor: darkTextPrimary,
+        iconColor: darkTextMuted,
+      ),
+      textTheme: const TextTheme(
+        bodyLarge: TextStyle(color: darkTextPrimary),
+        bodyMedium: TextStyle(color: darkTextPrimary),
+        bodySmall: TextStyle(color: darkTextMuted),
+        titleLarge: TextStyle(color: darkTextPrimary, fontWeight: FontWeight.bold),
+        titleMedium: TextStyle(color: darkTextPrimary, fontWeight: FontWeight.w600),
+        titleSmall: TextStyle(color: darkTextPrimary),
       ),
     );
   }

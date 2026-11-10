@@ -34,6 +34,21 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   void _navigateNext() {
     if (!mounted) return;
     final auth = context.read<AuthProvider>();
+    if (auth.isLoading) {
+      void onAuthReady() {
+        if (!auth.isLoading && mounted) {
+          auth.removeListener(onAuthReady);
+          _doNavigate(auth);
+        }
+      }
+      auth.addListener(onAuthReady);
+      return;
+    }
+    _doNavigate(auth);
+  }
+
+  void _doNavigate(AuthProvider auth) {
+    if (!mounted) return;
     final nextScreen = auth.isLoggedIn ? const MainNavigation() : const LoginScreen();
 
     Navigator.of(context).pushReplacement(

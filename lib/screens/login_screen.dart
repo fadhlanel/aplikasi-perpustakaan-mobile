@@ -381,26 +381,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-
-                    // Demo Account Shortcut
-                    Center(
-                      child: TextButton.icon(
-                        onPressed: () {
-                          _nisController.text = AppConstants.defaultNis;
-                          _pinController.text = AppConstants.defaultPin;
-                          _handleLogin();
-                        },
-                        icon: const Icon(Icons.flash_on_rounded, size: 16, color: AppTheme.accentBlue),
-                        label: const Text(
-                          'Masuk Cepat dengan Akun Siswa Demo',
-                          style: TextStyle(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.accentBlue,
-                          ),
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ),
