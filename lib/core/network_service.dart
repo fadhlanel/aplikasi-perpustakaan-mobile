@@ -47,6 +47,7 @@ class NetworkService extends ChangeNotifier {
 
     bool hasInternet = false;
 
+    // Laravel health endpoint default: /up.
     // 1. Cek apakah ada akses internet ke luar
     try {
       final probe = await http

@@ -65,9 +65,10 @@ class _PinjamanScreenState extends State<PinjamanScreen> {
             child: const Text('Batal'),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.of(ctx).pop();
-              final success = provider.perpanjangPinjaman(loan.id);
+              final success = await provider.perpanjangPinjaman(loan.id);
+              if (!context.mounted) return;
               if (success) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(

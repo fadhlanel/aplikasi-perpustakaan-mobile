@@ -689,7 +689,7 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
       buku: buku,
       nis: auth.profile.nis,
       nama: auth.profile.nama,
-      tanggalAmbil: '${selectedDate.day.toString().padLeft(2, '0')}/${selectedDate.month.toString().padLeft(2, '0')}/${selectedDate.year}',
+      tanggalAmbil: '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}',
     );
 
     if (!mounted || !context.mounted) return;

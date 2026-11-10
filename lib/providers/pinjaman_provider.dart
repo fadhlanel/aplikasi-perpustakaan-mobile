@@ -158,6 +158,7 @@ class PinjamanProvider extends ChangeNotifier {
         'buku_id': buku.id,
         'nis': nis,
         'nama_peminjam': nama,
+        'tanggal_ambil': tanggalAmbil,
       });
     } catch (_) {
       // API offline fallback
@@ -188,7 +189,23 @@ class PinjamanProvider extends ChangeNotifier {
     return true;
   }
 
-  bool perpanjangPinjaman(int peminjamanId) {
+  Future<bool> perpanjangPinjaman(int peminjamanId) async {
+    if (!activeLoans.any((item) => item.id == peminjamanId)) {
+      return false;
+    }
+    try {
+      final response = await ApiClient.postJson('/peminjaman/$peminjamanId/perpanjang');
+      final data = response['data'];
+      if (data is Map<String, dynamic>) {
+        final updated = Peminjaman.fromJson(data);
+        activeLoans = activeLoans.map((item) => item.id == peminjamanId ? updated : item).toList();
+        notifyListeners();
+        return true;
+      }
+    } catch (_) {
+      // Fallback lokal saat API tidak tersedia.
+    }
+
     bool success = false;
     activeLoans = activeLoans.map((loan) {
       if (loan.id == peminjamanId && loan.bisaPerpanjang) {
