@@ -1,29 +1,11 @@
 import 'package:flutter/foundation.dart';
 
 import '../core/api_client.dart';
-import '../core/offline_cache.dart';
 import '../models/buku.dart';
 import '../models/kategori.dart';
 
 class BukuProvider extends ChangeNotifier {
-  BukuProvider() {
-    _initDefaultData();
-    _loadFromCache();
-  }
-
-  Future<void> _loadFromCache() async {
-    try {
-      final cached = await OfflineCache.getBooks();
-      if (cached != null) {
-        final cachedItems = _parseBukuList(cached);
-        if (cachedItems.isNotEmpty) {
-          items = cachedItems;
-          total = items.length;
-          notifyListeners();
-        }
-      }
-    } catch (_) {}
-  }
+  BukuProvider();
 
   List<Buku> items = <Buku>[];
   List<Kategori> kategoris = <Kategori>[];
@@ -60,6 +42,7 @@ class BukuProvider extends ChangeNotifier {
     }).toList();
   }
 
+  /*
   void _initDefaultData() {
     // Data default presisi sesuai dengan 6 mockup Figma
     popularBooks = [
@@ -180,6 +163,8 @@ class BukuProvider extends ChangeNotifier {
     total = items.length;
   }
 
+  */
+
   Buku getHeroBook() {
     return const Buku(
       id: 1,
@@ -270,8 +255,7 @@ class BukuProvider extends ChangeNotifier {
         currentPage = (meta['current_page'] as num?)?.toInt() ?? 1;
         lastPage = (meta['last_page'] as num?)?.toInt() ?? 1;
         total = (meta['total'] as num?)?.toInt() ?? items.length;
-        // Simpan ke cache lokal untuk akses offline
-        await OfflineCache.saveBooks(res);
+        // API adalah satu-satunya sumber data production.
       }
       _setLoading(false, error: null);
     } catch (e) {
@@ -280,18 +264,11 @@ class BukuProvider extends ChangeNotifier {
       if (e is ApiException && !e.isNetworkError) {
         _setLoading(false, error: e.message);
       } else {
-        // Fallback offline resilien: coba muat dari data cache terakhir
-        final cached = await OfflineCache.getBooks();
-        if (cached != null) {
-          final cachedItems = _parseBukuList(cached);
-          if (cachedItems.isNotEmpty) {
-            items = cachedItems;
-            popularBooks = cachedItems.take(3).toList(growable: false);
-            latestBooks = cachedItems.reversed.take(4).toList(growable: false);
-            total = items.length;
-          }
-        }
-        _setLoading(false, error: null);
+        items = <Buku>[];
+        popularBooks = <Buku>[];
+        latestBooks = <Buku>[];
+        total = 0;
+        _setLoading(false, error: 'Data buku tidak dapat dimuat dari server.');
       }
     } finally {
       notifyListeners();

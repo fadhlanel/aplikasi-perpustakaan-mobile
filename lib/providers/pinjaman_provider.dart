@@ -1,34 +1,10 @@
 import 'package:flutter/foundation.dart';
 import '../core/api_client.dart';
-import '../core/offline_cache.dart';
 import '../models/buku.dart';
 import '../models/peminjaman.dart';
 
 class PinjamanProvider extends ChangeNotifier {
-  PinjamanProvider() {
-    _initDefaultLoans();
-    _loadFromCache();
-  }
-
-  Future<void> _loadFromCache() async {
-    try {
-      final cached = await OfflineCache.getLoans();
-      if (cached != null) {
-        final list = cached['data'];
-        if (list is List && list.isNotEmpty) {
-          final parsed = list
-              .whereType<Map<String, dynamic>>()
-              .map(Peminjaman.fromJson)
-              .toList();
-          final active = parsed.where((p) => !p.sudahDikembalikan).toList();
-          final returned = parsed.where((p) => p.sudahDikembalikan).toList();
-          if (active.isNotEmpty) activeLoans = active;
-          if (returned.isNotEmpty) historyLoans = [...returned, ...historyLoans];
-          notifyListeners();
-        }
-      }
-    } catch (_) {}
-  }
+  PinjamanProvider();
 
   int selectedTab = 0; // 0: Sedang Dipinjam, 1: Riwayat Selesai, 2: Denda & Telat
   bool loading = false;
@@ -38,6 +14,7 @@ class PinjamanProvider extends ChangeNotifier {
   List<Peminjaman> historyLoans = <Peminjaman>[];
   List<Peminjaman> dendaLoans = <Peminjaman>[];
 
+  /*
   void _initDefaultLoans() {
     activeLoans = [
       Peminjaman.dummyUtama(),
@@ -139,6 +116,8 @@ class PinjamanProvider extends ChangeNotifier {
     dendaLoans = [];
   }
 
+  */
+
   void setTab(int tabIndex) {
     selectedTab = tabIndex;
     notifyListeners();
@@ -169,7 +148,10 @@ class PinjamanProvider extends ChangeNotifier {
         notifyListeners();
         return false;
       }
-      // Jaringan terputus: lanjutkan ke pinjaman lokal (offline mode).
+      loading = false;
+      error = 'Server tidak dapat dijangkau. Data lokal tidak digunakan.';
+      notifyListeners();
+      return false;
     } catch (_) {
       loading = false;
       notifyListeners();
@@ -232,6 +214,9 @@ class PinjamanProvider extends ChangeNotifier {
   }
 
   Future<void> fetchApiLoans() async {
+    activeLoans = <Peminjaman>[];
+    historyLoans = <Peminjaman>[];
+    dendaLoans = <Peminjaman>[];
     try {
       final res = await ApiClient.getJson('/peminjaman');
       final list = res['data'];
@@ -244,14 +229,13 @@ class PinjamanProvider extends ChangeNotifier {
         final active = parsed.where((p) => !p.sudahDikembalikan).toList();
         final returned = parsed.where((p) => p.sudahDikembalikan).toList();
 
-        if (active.isNotEmpty) activeLoans = active;
-        if (returned.isNotEmpty) historyLoans = [...returned, ...historyLoans];
-        await OfflineCache.saveLoans(res);
+        activeLoans = active;
+        historyLoans = returned;
         notifyListeners();
       }
     } catch (_) {
-      // Fallback offline: muat data peminjaman terakhir
-      await _loadFromCache();
+      error = 'Data peminjaman tidak dapat dimuat dari server.';
+      notifyListeners();
     }
   }
 }
