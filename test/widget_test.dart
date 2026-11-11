@@ -56,7 +56,8 @@ void main() {
     await tester.pumpWidget(createTestApp(const HomeScreen()));
 
     expect(find.text('PUSTAKADIGITAL'), findsOneWidget);
-    expect(find.text('STATUS PEMINJAMAN ANDA'), findsOneWidget);
+    // Tanpa data dummy: tidak ada kartu peminjaman dummy.
+    expect(find.text('STATUS PEMINJAMAN ANDA'), findsNothing);
     expect(find.text('Kategori Buku'), findsOneWidget);
     expect(find.text('Rekomendasi Terpopuler'), findsOneWidget);
     // Badge status koneksi REST API tampil di header beranda.
@@ -78,7 +79,8 @@ void main() {
     expect(find.text('Pinjaman Saya'), findsOneWidget);
     expect(find.text('Kebijakan'), findsOneWidget);
     expect(find.text('Sedang Dipinjam'), findsOneWidget);
-    expect(find.text('Ajukan Perpanjangan Waktu (+1 Hari)'), findsOneWidget);
+    // Tanpa data dummy: tidak ada tombol perpanjangan untuk pinjaman dummy.
+    expect(find.text('Ajukan Perpanjangan Waktu (+1 Hari)'), findsNothing);
   });
 
   testWidgets('Layar 6: Profil screen menampilkan identitas siswa, 3 statistik, menu aktivitas & keluar akun', (tester) async {
