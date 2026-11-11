@@ -6,6 +6,7 @@ import 'core/network_service.dart';
 import 'providers/auth_provider.dart';
 import 'providers/buku_provider.dart';
 import 'providers/pinjaman_provider.dart';
+import 'providers/riwayat_provider.dart';
 import 'screens/splash_screen.dart';
 
 void main() {
@@ -24,6 +25,7 @@ class PustakaDigitalApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => BukuProvider()),
         ChangeNotifierProvider(create: (_) => PinjamanProvider()),
+        ChangeNotifierProvider(create: (_) => RiwayatProvider()),
       ],
       child: MaterialApp(
         title: 'Pustaka Digital',

@@ -52,6 +52,17 @@ class OfflineCache {
     return null;
   }
 
+  /// Mengambil waktu sinkronisasi terakhir sebagai DateTime.
+  static Future<DateTime?> getLastSyncTime() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final value = prefs.getString(_keyLastSync);
+      return value == null ? null : DateTime.tryParse(value);
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Mengambil waktu sinkronisasi terakhir
   static Future<String?> getLastSyncTimeFormatted() async {
     try {

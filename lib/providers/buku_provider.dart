@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../core/api_client.dart';
+import '../core/offline_cache.dart';
 import '../models/buku.dart';
 import '../models/kategori.dart';
 
@@ -264,11 +265,13 @@ class BukuProvider extends ChangeNotifier {
       if (e is ApiException && !e.isNetworkError) {
         _setLoading(false, error: e.message);
       } else {
-        items = <Buku>[];
-        popularBooks = <Buku>[];
-        latestBooks = <Buku>[];
-        total = 0;
-        _setLoading(false, error: 'Data buku tidak dapat dimuat dari server.');
+        final cached = await OfflineCache.getBooks();
+        final cachedItems = cached == null ? const <Buku>[] : _parseBukuList(cached);
+        items = cachedItems;
+        popularBooks = cachedItems.take(3).toList(growable: false);
+        latestBooks = cachedItems.reversed.take(4).toList(growable: false);
+        total = cachedItems.length;
+        _setLoading(false, error: cachedItems.isEmpty ? 'Data buku tidak dapat dimuat dari server.' : 'Menampilkan data terakhir yang tersimpan.');
       }
     } finally {
       notifyListeners();

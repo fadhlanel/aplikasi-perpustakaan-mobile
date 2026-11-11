@@ -13,8 +13,10 @@ enum ConnectionStatus {
   noInternet, // Tidak ada koneksi internet sama sekali
 }
 
-class NetworkService extends ChangeNotifier {
+class NetworkService extends ChangeNotifier with WidgetsBindingObserver {
   NetworkService() {
+    WidgetsBinding.instance.addObserver(this);
+    _loadLastSync();
     checkConnection();
     _startPeriodicCheck();
   }
@@ -55,8 +57,24 @@ class NetworkService extends ChangeNotifier {
 
   DateTime? get lastSyncTime => _lastSyncTime;
 
+  Future<void> _loadLastSync() async {
+    _lastSyncTime = await OfflineCache.getLastSyncTime();
+    notifyListeners();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      checkConnection();
+      _startPeriodicCheck();
+    } else if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
+      _timer?.cancel();
+    }
+  }
+
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
     _timer = null;
     super.dispose();

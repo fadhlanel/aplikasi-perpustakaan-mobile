@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../core/api_client.dart';
+import '../core/offline_cache.dart';
 import '../models/buku.dart';
 import '../models/peminjaman.dart';
 
@@ -221,6 +222,7 @@ class PinjamanProvider extends ChangeNotifier {
       final res = await ApiClient.getJson('/peminjaman');
       final list = res['data'];
       if (list is List && list.isNotEmpty) {
+        await OfflineCache.saveLoans(res);
         final parsed = list
             .whereType<Map<String, dynamic>>()
             .map(Peminjaman.fromJson)
@@ -234,7 +236,16 @@ class PinjamanProvider extends ChangeNotifier {
         notifyListeners();
       }
     } catch (_) {
-      error = 'Data peminjaman tidak dapat dimuat dari server.';
+      final cached = await OfflineCache.getLoans();
+      final list = cached?['data'];
+      if (list is List) {
+        final parsed = list.whereType<Map<String, dynamic>>().map(Peminjaman.fromJson).toList();
+        activeLoans = parsed.where((p) => !p.sudahDikembalikan).toList();
+        historyLoans = parsed.where((p) => p.sudahDikembalikan).toList();
+        error = 'Menampilkan data peminjaman terakhir yang tersimpan.';
+      } else {
+        error = 'Data peminjaman tidak dapat dimuat dari server.';
+      }
       notifyListeners();
     }
   }
