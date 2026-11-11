@@ -43,7 +43,7 @@ class ApiClient {
     if (_envBaseUrl.isNotEmpty) return _envBaseUrl;
     if (_legacyBaseUrl.isNotEmpty) return _legacyBaseUrl;
     // Produksi: Back4App Containers.
-    return 'https://restapiperpustakaan-cnhlz3zv.back4.app/api/v1';
+    return 'https://restapiperpustakaan-oyzv47sh.back4.app/api/v1';
   }
 
   /// Proyek belum memakai autentikasi token; backend tidak punya Sanctum.
