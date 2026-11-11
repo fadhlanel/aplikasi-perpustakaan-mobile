@@ -32,8 +32,9 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
 
     final buku = bukuProv.items.firstWhere(
       (b) => b.id == widget.bukuId,
-      orElse: () => bukuProv.getHeroBook(),
+      orElse: Buku.kosong,
     );
+    final bukuTersedia = buku.id != 0;
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -57,6 +58,11 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            if (!bukuTersedia)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: Text('Buku tidak tersedia. Muat ulang katalog dari server.'),
+              ),
             // Top action bar (Share & Bookmark)
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
@@ -449,7 +455,7 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
               Expanded(
                 flex: 5,
                 child: ElevatedButton.icon(
-                  onPressed: _isPinjamLoading
+                  onPressed: _isPinjamLoading || !bukuTersedia
                       ? null
                       : () => _handlePinjam(context, buku, auth, pinjamanProv),
                   icon: _isPinjamLoading

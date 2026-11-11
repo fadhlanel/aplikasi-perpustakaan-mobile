@@ -72,8 +72,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
+                    Expanded(
+                      child: Row(
+                        children: [
                         Container(
                           width: 40,
                           height: 40,
@@ -111,6 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ],
                         ),
                       ],
+                    ),
                     ),
                     Row(
                       mainAxisSize: MainAxisSize.min,

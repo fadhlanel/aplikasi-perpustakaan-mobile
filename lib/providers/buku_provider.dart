@@ -261,11 +261,11 @@ class BukuProvider extends ChangeNotifier {
         if (kategoriId != null) 'kategori_id': '$kategoriId',
       });
       final apiItems = _parseBukuList(res);
+      // Respons API sukses tetap menjadi sumber kebenaran, termasuk saat kosong.
+      items = apiItems;
+      popularBooks = apiItems.take(3).toList(growable: false);
+      latestBooks = apiItems.reversed.take(4).toList(growable: false);
       if (apiItems.isNotEmpty) {
-        items = apiItems;
-        // Beranda harus memakai ID buku dari API, bukan ID mockup.
-        popularBooks = apiItems.take(3).toList(growable: false);
-        latestBooks = apiItems.reversed.take(4).toList(growable: false);
         final meta = res['meta'] as Map<String, dynamic>? ?? const {};
         currentPage = (meta['current_page'] as num?)?.toInt() ?? 1;
         lastPage = (meta['last_page'] as num?)?.toInt() ?? 1;
@@ -354,11 +354,8 @@ class BukuProvider extends ChangeNotifier {
       // Fallback lokal jika backend tidak aktif
     }
 
-    final match = items.firstWhere(
-      (b) => b.id == id,
-      orElse: () => id == 1 ? getHeroBook() : popularBooks.first,
-    );
-    return match;
+    // Jangan kembalikan mock untuk aksi online; ID mock menyebabkan 404 saat reservasi.
+    return Buku.kosong();
   }
 
   void _setLoading(bool value, {String? error}) {
