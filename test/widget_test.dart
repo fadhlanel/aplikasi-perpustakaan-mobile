@@ -4,8 +4,10 @@ import 'package:provider/provider.dart';
 
 import 'package:pustaka_digital/core/app_theme.dart';
 import 'package:pustaka_digital/core/network_service.dart';
+import 'package:pustaka_digital/models/pengumuman.dart';
 import 'package:pustaka_digital/providers/auth_provider.dart';
 import 'package:pustaka_digital/providers/buku_provider.dart';
+import 'package:pustaka_digital/providers/pengumuman_provider.dart';
 import 'package:pustaka_digital/providers/pinjaman_provider.dart';
 import 'package:pustaka_digital/screens/detail_buku_screen.dart';
 import 'package:pustaka_digital/screens/home_screen.dart';
@@ -14,6 +16,7 @@ import 'package:pustaka_digital/screens/pinjaman_screen.dart';
 import 'package:pustaka_digital/screens/profil_screen.dart';
 import 'package:pustaka_digital/screens/splash_screen.dart';
 import 'package:pustaka_digital/widgets/api_status_badge.dart';
+import 'package:pustaka_digital/widgets/pengumuman_section.dart';
 
 Widget createTestApp(Widget child) {
   return MultiProvider(
@@ -21,6 +24,7 @@ Widget createTestApp(Widget child) {
       ChangeNotifierProvider(create: (_) => NetworkService()),
       ChangeNotifierProvider(create: (_) => AuthProvider()),
       ChangeNotifierProvider(create: (_) => BukuProvider()),
+      ChangeNotifierProvider(create: (_) => PengumumanProvider()),
       ChangeNotifierProvider(create: (_) => PinjamanProvider()),
     ],
     child: MaterialApp(
@@ -90,5 +94,46 @@ void main() {
     expect(find.text('Buku Favorit & Bookmark'), findsOneWidget);
     expect(find.text('Pengaturan Tema & Akun'), findsOneWidget);
     expect(find.text('Keluar Akun'), findsOneWidget);
+  });
+
+  testWidgets('Section pengumuman menampilkan state memuat, kosong, error, & offline', (tester) async {
+    final prov = PengumumanProvider();
+    Widget view() => ChangeNotifierProvider<PengumumanProvider>.value(
+          value: prov,
+          child: MaterialApp(
+            theme: AppTheme.build(),
+            home: Scaffold(
+              body: PengumumanSection(
+                key: ValueKey(
+                    '${prov.loading}|${prov.items.length}|${prov.error}|${prov.offline}'),
+              ),
+            ),
+          ),
+        );
+
+    prov.loading = true;
+    await tester.pumpWidget(view());
+    expect(find.text('Memuat pengumuman'), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+    prov.loading = false;
+    await tester.pumpWidget(view());
+    expect(find.text('Belum ada pengumuman'), findsOneWidget);
+
+    prov.error = 'Data tidak ditemukan.';
+    await tester.pumpWidget(view());
+    expect(find.text('Pengumuman gagal dimuat'), findsOneWidget);
+    expect(find.text('Data tidak ditemukan.'), findsOneWidget);
+    expect(find.text('Coba lagi'), findsOneWidget);
+
+    prov.error = null;
+    prov.offline = true;
+    prov.items = [
+      const Pengumuman(id: 1, judul: 'Jam layanan', isi: 'Perpustakaan buka 07.00-15.00.'),
+    ];
+    await tester.pumpWidget(view());
+    expect(find.text('Mode offline'), findsOneWidget);
+    expect(find.text('Jam layanan'), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
   });
 }

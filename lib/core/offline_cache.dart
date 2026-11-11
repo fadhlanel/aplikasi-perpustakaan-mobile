@@ -8,6 +8,7 @@ class OfflineCache {
 
   static const String _keyBooks = 'offline_cache_books';
   static const String _keyLoans = 'offline_cache_loans';
+  static const String _keyAnnouncements = 'offline_cache_pengumuman';
   static const String _keyLastSync = 'offline_cache_last_sync';
 
   /// Menyimpan respons buku terakhir ke cache lokal
@@ -52,6 +53,26 @@ class OfflineCache {
     return null;
   }
 
+  /// Menyimpan respons pengumuman terakhir ke cache lokal
+  static Future<void> saveAnnouncements(Map<String, dynamic> data) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_keyAnnouncements, jsonEncode(data));
+    } catch (_) {}
+  }
+
+  /// Mengambil data pengumuman dari cache lokal
+  static Future<Map<String, dynamic>?> getAnnouncements() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final str = prefs.getString(_keyAnnouncements);
+      if (str != null && str.isNotEmpty) {
+        return jsonDecode(str) as Map<String, dynamic>;
+      }
+    } catch (_) {}
+    return null;
+  }
+
   /// Mengambil waktu sinkronisasi terakhir sebagai DateTime.
   static Future<DateTime?> getLastSyncTime() async {
     try {
@@ -89,6 +110,7 @@ class OfflineCache {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_keyBooks);
       await prefs.remove(_keyLoans);
+      await prefs.remove(_keyAnnouncements);
       await prefs.remove(_keyLastSync);
     } catch (_) {}
   }

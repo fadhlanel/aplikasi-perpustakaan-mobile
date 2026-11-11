@@ -6,10 +6,12 @@ import '../core/network_service.dart';
 import '../models/buku.dart';
 import '../providers/auth_provider.dart';
 import '../providers/buku_provider.dart';
+import '../providers/pengumuman_provider.dart';
 import '../providers/pinjaman_provider.dart';
 import '../widgets/api_status_badge.dart';
 import '../widgets/book_cover_widget.dart';
 import '../widgets/custom_badge.dart';
+import '../widgets/pengumuman_section.dart';
 import 'detail_buku_screen.dart';
 import 'pinjaman_screen.dart';
 
@@ -26,6 +28,14 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<PengumumanProvider>().ensureLoaded();
+    });
+  }
 
   @override
   void dispose() {
@@ -53,6 +63,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final bukuProv = context.watch<BukuProvider>();
+    final pengumumanProv = context.watch<PengumumanProvider>();
     final pinjamanProv = context.watch<PinjamanProvider>();
     final network = context.watch<NetworkService>();
     final profile = auth.profile;
@@ -68,6 +79,7 @@ class _HomeScreenState extends State<HomeScreen> {
           onRefresh: () async {
             await network.checkConnection();
             await bukuProv.loadFirst();
+            await pengumumanProv.load();
             await pinjamanProv.fetchApiLoans();
           },
           child: SingleChildScrollView(
@@ -362,6 +374,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
+
+                // Pengumuman perpustakaan (GET /pengumuman)
+                const PengumumanSection(),
+                const SizedBox(height: 18),
 
                 // Search Bar
                 Container(
