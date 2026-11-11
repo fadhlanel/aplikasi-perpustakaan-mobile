@@ -64,10 +64,10 @@ class NetworkService extends ChangeNotifier {
     });
   }
 
-  /// URL health check backend. `/health` berada di root, bukan di bawah `/api/v1`.
+  /// URL health check backend. `/api` berada di root, bukan di bawah `/api/v1`.
   static Uri get healthUri {
     final base = Uri.parse(ApiClient.baseUrl);
-    return base.replace(path: '/health', query: null);
+    return base.replace(path: '/api', query: null);
   }
 
   /// Memeriksa status koneksi internet dan API
@@ -111,7 +111,7 @@ class NetworkService extends ChangeNotifier {
           .get(healthUri, headers: const {'Accept': 'application/json'})
           .timeout(_probeTimeout);
 
-      // /health mengembalikan 200 saat aplikasi dan database siap,
+      // /api mengembalikan 200 saat aplikasi dan database siap,
       // 503 saat database tidak tersedia. Keduanya berarti server terjangkau.
       if (res.statusCode == 200) {
         _status = ConnectionStatus.connected;
