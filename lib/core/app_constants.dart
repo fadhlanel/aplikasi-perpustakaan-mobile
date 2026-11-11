@@ -17,5 +17,8 @@ class AppConstants {
   static const int maxLoanQuota = 3;
   static const int loanDurationDays = 7;
   static const String loanPolicyText =
+      // ponytail: teks durasi disinkronkan manual dengan env backend
+      // LOAN_DURATION_DAYS=3 / LOAN_EXTENSION_DAYS=1; naikkan ke config API
+      // publik (mis. /api/v1/config) kalau nilainya sering berubah.
       'Maksimal peminjaman 3 eksemplar buku dengan durasi pinjam 3 hari kalender. Perpanjangan mandiri berlaku 1x selama 1 hari per transaksi.';
 }

@@ -46,6 +46,20 @@ class BukuProvider extends ChangeNotifier {
   List<Buku> popularBooks = <Buku>[];
   List<Buku> latestBooks = <Buku>[];
 
+  List<Buku> get filteredPopularBooks => _filterCategory(popularBooks);
+  List<Buku> get filteredLatestBooks => _filterCategory(latestBooks);
+
+  List<Buku> _filterCategory(List<Buku> books) {
+    if (selectedCategoryName == 'Semua') return books;
+    return books.where((book) {
+      final nama = book.namaKategori;
+      if (nama.toLowerCase().contains(selectedCategoryName.toLowerCase())) return true;
+      // Penyamaan logika dengan Katalog (katalog_screen.dart).
+      return selectedCategoryName == 'RPL & IT' &&
+          (nama.contains('RPL') || nama.contains('Software') || nama.contains('Teknologi'));
+    }).toList();
+  }
+
   void _initDefaultData() {
     // Data default presisi sesuai dengan 6 mockup Figma
     popularBooks = [

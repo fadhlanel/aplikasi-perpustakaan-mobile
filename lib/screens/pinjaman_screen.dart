@@ -28,10 +28,10 @@ class _PinjamanScreenState extends State<PinjamanScreen> {
 
   String _nextDueDate(Peminjaman loan) {
     final match = RegExp(r'^(\d{1,2}) (\w+) (\d{4})').firstMatch(loan.tanggalJatuhTempo);
-    if (match == null) return '7 hari setelah tanggal jatuh tempo saat ini';
+    if (match == null) return '1 hari setelah tanggal jatuh tempo saat ini';
     const months = <String>['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
     const monthNumbers = <String, int>{'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'Mei': 5, 'Jun': 6, 'Jul': 7, 'Agu': 8, 'Sep': 9, 'Okt': 10, 'Nov': 11, 'Des': 12};
-    final date = DateTime(int.parse(match.group(3)!), monthNumbers[match.group(2)] ?? 1, int.parse(match.group(1)!)).add(const Duration(days: 7));
+    final date = DateTime(int.parse(match.group(3)!), monthNumbers[match.group(2)] ?? 1, int.parse(match.group(1)!)).add(const Duration(days: 1));
     return '${date.day.toString().padLeft(2, '0')} ${months[date.month - 1]} ${date.year}';
   }
 
@@ -46,16 +46,19 @@ class _PinjamanScreenState extends State<PinjamanScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Row(
           children: [
             Icon(Icons.history_rounded, color: AppTheme.accentBlue),
             SizedBox(width: 8),
-            Text('Perpanjang Pinjaman?'),
+            Expanded(
+              child: Text('Perpanjang Pinjaman?', maxLines: 2),
+            ),
           ],
         ),
         content: Text(
-          'Ajukan penambahan durasi pinjam selama +7 hari untuk buku "${loan.judulBuku}". '
+          'Ajukan penambahan durasi pinjam selama +1 hari untuk buku "${loan.judulBuku}". '
           'Batas kembali baru: ${_nextDueDate(loan)}.',
           style: const TextStyle(fontSize: 13, height: 1.4),
         ),
@@ -73,7 +76,7 @@ class _PinjamanScreenState extends State<PinjamanScreen> {
               if (success) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Perpanjangan waktu +7 hari berhasil diajukan!'),
+                    content: Text('Perpanjangan waktu +1 hari berhasil diajukan!'),
                     backgroundColor: AppTheme.mintGreen,
                   ),
                 );
@@ -547,7 +550,7 @@ class _PinjamanScreenState extends State<PinjamanScreen> {
           ),
           const SizedBox(height: 14),
 
-          // Action Button: Ajukan Perpanjangan Waktu (+7 Hari)
+          // Action Button: Ajukan Perpanjangan Waktu (+1 Hari)
           SizedBox(
             width: double.infinity,
             height: 44,
@@ -557,7 +560,7 @@ class _PinjamanScreenState extends State<PinjamanScreen> {
               label: FittedBox(
                 fit: BoxFit.scaleDown,
                 child: Text(
-                  loan.bisaPerpanjang ? 'Ajukan Perpanjangan Waktu (+7 Hari)' : 'Perpanjangan Sudah Digunakan',
+                  loan.bisaPerpanjang ? 'Ajukan Perpanjangan Waktu (+1 Hari)' : 'Perpanjangan Sudah Digunakan',
                   style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                 ),
               ),

@@ -11,6 +11,7 @@ import '../widgets/api_status_badge.dart';
 import '../widgets/book_cover_widget.dart';
 import '../widgets/custom_badge.dart';
 import 'detail_buku_screen.dart';
+import 'pinjaman_screen.dart';
 
 /// Screen 3: Beranda (Home Screen)
 /// Sesuai 100% dengan Mockup Desain Figma (Foto 2)
@@ -114,7 +115,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Row(
                       children: [
                         // Status Keterhubungan REST API
-                        const ApiStatusBadge(isCompact: true),
+                        const ApiStatusBadge(),
                         const SizedBox(width: 4),
                         IconButton(
                           onPressed: () {
@@ -367,7 +368,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 // Status Peminjaman Anda Card
                 if (activeLoan != null) ...[
-                  Container(
+                  GestureDetector(
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const PinjamanScreen()),
+                    ),
+                    child: Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
@@ -563,6 +568,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ],
                     ),
+                    ),
                   ),
                   const SizedBox(height: 22),
                 ],
@@ -599,6 +605,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
+                      _buildCategoryChip('Semua', Icons.grid_view_rounded, bukuProv),
+                      const SizedBox(width: 8),
                       _buildCategoryChip('RPL & IT', Icons.code_rounded, bukuProv),
                       const SizedBox(width: 8),
                       _buildCategoryChip('Sains & Fisika', Icons.science_outlined, bukuProv),
@@ -658,10 +666,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   height: 290,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
-                    itemCount: bukuProv.popularBooks.length,
+                    itemCount: bukuProv.filteredPopularBooks.length,
                     separatorBuilder: (_, index) => const SizedBox(width: 14),
                     itemBuilder: (context, index) {
-                      final buku = bukuProv.popularBooks[index];
+                      final buku = bukuProv.filteredPopularBooks[index];
                       return _buildPopularCard(buku, bukuProv);
                     },
                   ),
@@ -716,9 +724,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
                   ),
-                  itemCount: bukuProv.latestBooks.length,
+                  itemCount: bukuProv.filteredLatestBooks.length,
                   itemBuilder: (context, index) {
-                    final buku = bukuProv.latestBooks[index];
+                    final buku = bukuProv.filteredLatestBooks[index];
                     return _buildLatestCard(buku);
                   },
                 ),

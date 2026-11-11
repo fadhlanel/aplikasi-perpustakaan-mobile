@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 
 import '../core/app_theme.dart';
 import '../core/offline_cache.dart';
-import '../core/theme_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/buku_provider.dart';
 import '../providers/pinjaman_provider.dart';
@@ -19,12 +18,13 @@ class ProfilScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Row(
           children: [
             Icon(Icons.logout_rounded, color: AppTheme.dangerRed),
             SizedBox(width: 8),
-            Text('Keluar Akun?'),
+            Expanded(child: Text('Keluar Akun?')),
           ],
         ),
         content: const Text(
@@ -662,10 +662,8 @@ class ProfilScreen extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (ctx) {
-        return Consumer<ThemeProvider>(
-          builder: (context, themeProv, _) {
-            final isDark = themeProv.isDark;
-            return SafeArea(
+        final isDark = Theme.of(ctx).brightness == Brightness.dark;
+        return SafeArea(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
                 child: Column(
@@ -717,31 +715,6 @@ class ProfilScreen extends StatelessWidget {
                       },
                     ),
                     const Divider(height: 1),
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      secondary: Icon(
-                        isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
-                        color: isDark ? AppTheme.cyanAccent : AppTheme.accentBlue,
-                      ),
-                      title: Text(
-                        'Tema Tampilan',
-                        style: TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w600,
-                          color: isDark ? AppTheme.darkTextPrimary : AppTheme.textDark,
-                        ),
-                      ),
-                      subtitle: Text(
-                        isDark ? 'Mode Gelap Aktif (Dark Mode)' : 'Mode Terang Aktif (Light Mode)',
-                        style: const TextStyle(fontSize: 11, color: AppTheme.textMuted),
-                      ),
-                      value: isDark,
-                      activeThumbColor: AppTheme.cyanAccent,
-                      onChanged: (val) {
-                        themeProv.setDark(val);
-                      },
-                    ),
-                    const Divider(height: 1),
                     ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: const Icon(Icons.cleaning_services_rounded, color: AppTheme.amberWarning),
@@ -779,8 +752,6 @@ class ProfilScreen extends StatelessWidget {
                 ),
               ),
             );
-          },
-        );
       },
     );
   }
@@ -832,8 +803,8 @@ class ProfilScreen extends StatelessWidget {
                       controller: scroll,
                       children: [
                         _buildRuleItem('1', 'Batas Kuota Pinjam', 'Maksimal 3 eksemplar buku per siswa sekaligus.'),
-                        _buildRuleItem('2', 'Durasi Peminjaman', 'Lama peminjaman adalah 7 hari kalender sejak tanggal transaksi.'),
-                        _buildRuleItem('3', 'Perpanjangan Mandiri', 'Perpanjangan dapat diajukan mandiri 1x per transaksi peminjaman (+7 hari kalender).'),
+                        _buildRuleItem('2', 'Durasi Peminjaman', 'Lama peminjaman adalah 3 hari kalender sejak tanggal transaksi.'),
+                        _buildRuleItem('3', 'Perpanjangan Mandiri', 'Perpanjangan dapat diajukan mandiri 1x per transaksi peminjaman (+1 hari kalender).'),
                         _buildRuleItem('4', 'Denda Keterlambatan', 'Keterlambatan pengembalian buku dikenakan denda administratif sebesar Rp 1.000 / hari per eksemplar.'),
                         _buildRuleItem('5', 'Integritas Koleksi', 'Dilarang mencoret, melipat, atau merusak barcode buku. Kehilangan buku wajib diganti dengan judul dan edisi yang sama.'),
                       ],
@@ -981,8 +952,7 @@ class ProfilScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final pinjaman = context.watch<PinjamanProvider>();
-    final themeProv = context.watch<ThemeProvider>();
-    final isDark = themeProv.isDark;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final profile = auth.profile;
     final activeLoans = pinjaman.activeLoans;
     final activeLoan = activeLoans.isNotEmpty ? activeLoans.first : null;

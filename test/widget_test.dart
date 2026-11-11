@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 
 import 'package:pustaka_digital/core/app_theme.dart';
 import 'package:pustaka_digital/core/network_service.dart';
-import 'package:pustaka_digital/core/theme_provider.dart';
 import 'package:pustaka_digital/providers/auth_provider.dart';
 import 'package:pustaka_digital/providers/buku_provider.dart';
 import 'package:pustaka_digital/providers/pinjaman_provider.dart';
@@ -19,7 +18,6 @@ import 'package:pustaka_digital/widgets/api_status_badge.dart';
 Widget createTestApp(Widget child) {
   return MultiProvider(
     providers: [
-      ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ChangeNotifierProvider(create: (_) => NetworkService()),
       ChangeNotifierProvider(create: (_) => AuthProvider()),
       ChangeNotifierProvider(create: (_) => BukuProvider()),
@@ -80,7 +78,7 @@ void main() {
     expect(find.text('Pinjaman Saya'), findsOneWidget);
     expect(find.text('Kebijakan'), findsOneWidget);
     expect(find.text('Sedang Dipinjam'), findsOneWidget);
-    expect(find.text('Ajukan Perpanjangan Waktu (+7 Hari)'), findsOneWidget);
+    expect(find.text('Ajukan Perpanjangan Waktu (+1 Hari)'), findsOneWidget);
   });
 
   testWidgets('Layar 6: Profil screen menampilkan identitas siswa, 3 statistik, menu aktivitas & keluar akun', (tester) async {
