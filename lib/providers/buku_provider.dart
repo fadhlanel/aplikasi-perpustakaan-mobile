@@ -263,6 +263,9 @@ class BukuProvider extends ChangeNotifier {
       final apiItems = _parseBukuList(res);
       if (apiItems.isNotEmpty) {
         items = apiItems;
+        // Beranda harus memakai ID buku dari API, bukan ID mockup.
+        popularBooks = apiItems.take(3).toList(growable: false);
+        latestBooks = apiItems.reversed.take(4).toList(growable: false);
         final meta = res['meta'] as Map<String, dynamic>? ?? const {};
         currentPage = (meta['current_page'] as num?)?.toInt() ?? 1;
         lastPage = (meta['last_page'] as num?)?.toInt() ?? 1;
@@ -283,6 +286,8 @@ class BukuProvider extends ChangeNotifier {
           final cachedItems = _parseBukuList(cached);
           if (cachedItems.isNotEmpty) {
             items = cachedItems;
+            popularBooks = cachedItems.take(3).toList(growable: false);
+            latestBooks = cachedItems.reversed.take(4).toList(growable: false);
             total = items.length;
           }
         }

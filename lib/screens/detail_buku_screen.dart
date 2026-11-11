@@ -672,6 +672,14 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
     AuthProvider auth,
     PinjamanProvider pinjamanProv,
   ) async {
+    final apiBook = context.read<BukuProvider>().items.where((item) => item.id == buku.id);
+    if (apiBook.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Data buku belum sinkron. Muat ulang katalog terlebih dahulu.')),
+      );
+      return;
+    }
+
     final selectedDate = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),

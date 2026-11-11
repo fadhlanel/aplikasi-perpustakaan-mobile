@@ -8,6 +8,7 @@ import '../providers/buku_provider.dart';
 import '../providers/pinjaman_provider.dart';
 import '../widgets/book_cover_widget.dart';
 import 'login_screen.dart';
+import 'pinjaman_screen.dart';
 
 /// Screen 6: Profil Siswa Screen
 /// Sesuai Desain Figma (Foto 5) dengan seluruh menu fungsional dan anti-overflow
@@ -1207,7 +1208,12 @@ class ProfilScreen extends StatelessWidget {
 
               // Active Loan Reminder Card (Dynamic from PinjamanProvider)
               if (activeLoan != null) ...[
-                Container(
+                InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const PinjamanScreen()),
+                  ),
+                  child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: isDark ? AppTheme.darkSurface : Colors.white,
@@ -1296,6 +1302,7 @@ class ProfilScreen extends StatelessWidget {
                         ),
                       ),
                     ],
+                  ),
                   ),
                 ),
               ] else ...[
