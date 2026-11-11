@@ -17,5 +17,5 @@ class AppConstants {
   static const int maxLoanQuota = 3;
   static const int loanDurationDays = 7;
   static const String loanPolicyText =
-      'Maksimal peminjaman 3 eksemplar buku dengan durasi pinjam 7 hari kalender. Perpanjangan mandiri berlaku 1x per transaksi.';
+      'Maksimal peminjaman 3 eksemplar buku dengan durasi pinjam 3 hari kalender. Perpanjangan mandiri berlaku 1x selama 1 hari per transaksi.';
 }

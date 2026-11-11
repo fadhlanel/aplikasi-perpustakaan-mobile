@@ -123,7 +123,7 @@ class Peminjaman {
     return '${baru.year}-${baru.month.toString().padLeft(2, '0')}-${baru.day.toString().padLeft(2, '0')}';
   }
 
-  Peminjaman perpanjangTujuhHari() {
+  Peminjaman perpanjangSatuHari() {
     return Peminjaman(
       id: id,
       trxId: trxId,
@@ -137,7 +137,7 @@ class Peminjaman {
       sampul: sampul,
       tanggalPinjam: tanggalPinjam,
       tanggalAmbil: tanggalAmbil,
-      tanggalJatuhTempo: _tambahHariKeTanggal(tanggalJatuhTempo, 7),
+      tanggalJatuhTempo: _tambahHariKeTanggal(tanggalJatuhTempo, 1),
       jumlahPerpanjangan: jumlahPerpanjangan + 1,
       status: status,
       sisaHari: sisaHari + 7,

@@ -187,7 +187,7 @@ class PinjamanProvider extends ChangeNotifier {
       kategoriNama: 'Informatika / ${buku.namaKategori}',
       lokasiRak: buku.lokasiRak,
       tanggalPinjam: 'Hari ini',
-      tanggalJatuhTempo: tanggalAmbil ?? '7 Hari ke depan',
+      tanggalJatuhTempo: tanggalAmbil ?? '3 Hari ke depan',
       status: 'dipinjam',
       sisaHari: 7,
       hariBerjalan: 0,
@@ -222,7 +222,7 @@ class PinjamanProvider extends ChangeNotifier {
     activeLoans = activeLoans.map((loan) {
       if (loan.id == peminjamanId && loan.bisaPerpanjang) {
         success = true;
-        return loan.perpanjangTujuhHari();
+        return loan.perpanjangSatuHari();
       }
       return loan;
     }).toList();

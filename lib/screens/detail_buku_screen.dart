@@ -685,7 +685,7 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
 
     setState(() => _isPinjamLoading = true);
 
-    await pinjamanProv.pinjamBuku(
+    final success = await pinjamanProv.pinjamBuku(
       buku: buku,
       nis: auth.profile.nis,
       nama: auth.profile.nama,
@@ -694,6 +694,13 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
 
     if (!mounted || !context.mounted) return;
     setState(() => _isPinjamLoading = false);
+    if (!success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(pinjamanProv.error ?? 'Reservasi gagal.')),
+      );
+      return;
+    }
+    context.read<BukuProvider>().decrementStock(buku.id);
 
     showDialog(
       context: context,
