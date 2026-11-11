@@ -113,6 +113,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                     Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         // Status Keterhubungan REST API
                         const ApiStatusBadge(),

@@ -63,7 +63,8 @@ class _ApiStatusBadgeState extends State<ApiStatusBadge> {
       onTap: () => _refresh(network),
       borderRadius: BorderRadius.circular(20),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        constraints: const BoxConstraints(maxWidth: 132),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
         decoration: BoxDecoration(
           color: bg,
           borderRadius: BorderRadius.circular(20),
@@ -84,9 +85,13 @@ class _ApiStatusBadgeState extends State<ApiStatusBadge> {
                     decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
                   ),
             const SizedBox(width: 6),
-            Text(
-              busy ? 'Memeriksa...' : text,
-              style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: textColor),
+            Flexible(
+              child: Text(
+                busy ? 'Memeriksa...' : text,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: textColor),
+              ),
             ),
           ],
         ),
