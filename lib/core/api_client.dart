@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 
-/// Base URL terpusat. Override saat build:
-///   --dart-define=API_BASE_URL=https://APP-NAME.back4.app/api/v1
+/// Base URL terpusat. Default langsung ke API produksi Back4App, jadi
+/// `flutter run` / build APK tanpa parameter apa pun sudah memakai produksi.
+/// Untuk development lokal, override:
+///   --dart-define=API_BASE_URL=http://10.0.2.2:8000/api/v1
 ///
 /// Nama lama `BASE_URL` tetap dibaca agar perintah build/dokumentasi lama tidak
 /// langsung rusak.
@@ -41,8 +42,8 @@ class ApiClient {
   static String get baseUrl {
     if (_envBaseUrl.isNotEmpty) return _envBaseUrl;
     if (_legacyBaseUrl.isNotEmpty) return _legacyBaseUrl;
-    if (kIsWeb) return 'http://127.0.0.1:8000/api/v1';
-    return 'http://10.0.2.2:8000/api/v1';
+    // Produksi: Back4App Containers.
+    return 'https://restapiperpustakaan-zwnd33xl.back4.app/api/v1';
   }
 
   /// Proyek belum memakai autentikasi token; backend tidak punya Sanctum.
