@@ -50,11 +50,9 @@ class _LoginScreenState extends State<LoginScreen> {
         MaterialPageRoute(builder: (_) => const MainNavigation()),
       );
     } else {
+      final message = auth.errorMessage ?? 'Login gagal. Silakan coba lagi.';
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('NIS atau PIN salah. Silakan coba lagi.'),
-          backgroundColor: AppTheme.dangerRed,
-        ),
+        SnackBar(content: Text(message), backgroundColor: AppTheme.dangerRed),
       );
     }
   }
