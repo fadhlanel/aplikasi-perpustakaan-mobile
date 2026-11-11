@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 
 /// Base URL terpusat. Override saat build:
-///   --dart-define=API_BASE_URL=https://SERVICE-URL.a.run.app/api/v1
+///   --dart-define=API_BASE_URL=https://APP-NAME.back4.app/api/v1
 ///
 /// Nama lama `BASE_URL` tetap dibaca agar perintah build/dokumentasi lama tidak
 /// langsung rusak.
