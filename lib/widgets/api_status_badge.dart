@@ -34,6 +34,13 @@ class _ApiStatusBadgeState extends State<ApiStatusBadge> {
     String text;
 
     switch (network.status) {
+      case ConnectionStatus.unknown:
+        bg = const Color(0xFFF1F5F9);
+        border = const Color(0xFFE2E8F0);
+        dot = const Color(0xFF94A3B8);
+        textColor = const Color(0xFF475569);
+        text = 'Memeriksa...';
+        break;
       case ConnectionStatus.connected:
         bg = const Color(0xFFECFDF5);
         border = const Color(0xFFA7F3D0);

@@ -4,8 +4,10 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'api_client.dart';
+import 'offline_cache.dart';
 
 enum ConnectionStatus {
+  unknown, // Masih memeriksa status saat aplikasi dibuka
   connected, // Terhubung ke REST API
   apiOffline, // Terhubung ke internet, namun server API tidak dapat dijangkau
   noInternet, // Tidak ada koneksi internet sama sekali
@@ -18,12 +20,13 @@ class NetworkService extends ChangeNotifier {
   }
 
   /// Interval pengecekan otomatis ke API.
-  static const Duration checkInterval = Duration(seconds: 60);
+  static const Duration checkInterval = Duration(seconds: 15);
 
   static const Duration _probeTimeout = Duration(seconds: 8);
 
   Timer? _timer;
-  ConnectionStatus _status = ConnectionStatus.connected;
+  ConnectionStatus _status = ConnectionStatus.unknown;
+  DateTime? _lastSyncTime;
   bool _isChecking = false;
   String? _lastError;
   DateTime? _lastChecked;
@@ -45,8 +48,12 @@ class NetworkService extends ChangeNotifier {
         return 'Mode Offline (Data Terakhir)';
       case ConnectionStatus.noInternet:
         return 'Tidak Ada Koneksi Internet';
+      case ConnectionStatus.unknown:
+        return 'Memeriksa...';
     }
   }
+
+  DateTime? get lastSyncTime => _lastSyncTime;
 
   @override
   void dispose() {
@@ -116,6 +123,7 @@ class NetworkService extends ChangeNotifier {
       if (res.statusCode == 200) {
         _status = ConnectionStatus.connected;
         _lastError = null;
+        await _syncBukuData();
       } else if (res.statusCode >= 500) {
         _status = ConnectionStatus.apiOffline;
         _lastError = _healthMessage(res) ??
@@ -135,6 +143,19 @@ class NetworkService extends ChangeNotifier {
     _lastChecked = DateTime.now();
     notifyListeners();
     return _status;
+  }
+
+  /// Sinkronisasi ringkas data buku ke cache lokal untuk memvalidasi
+  /// bahwa database backend benar-benar dapat dibaca oleh aplikasi.
+  Future<void> _syncBukuData() async {
+    try {
+      final data = await ApiClient.getJson('/buku', query: {'per_page': '1'});
+      await OfflineCache.saveBooks(data);
+      _lastSyncTime = DateTime.now();
+      notifyListeners();
+    } catch (_) {
+      // Sinkronisasi gagal tidak mengubah status koneksi; data lama tetap dipakai.
+    }
   }
 
   String? _healthMessage(http.Response res) {

@@ -41,6 +41,14 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  String _relativeTime(DateTime dt) {
+    final diff = DateTime.now().difference(dt);
+    if (diff.inMinutes < 1) return 'baru saja';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} menit lalu';
+    if (diff.inHours < 24) return '${diff.inHours} jam lalu';
+    return '${dt.day}/${dt.month}/${dt.year}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
@@ -122,9 +130,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         const SizedBox(width: 4),
                         IconButton(
                           onPressed: () {
+                            final sync = network.lastSyncTime;
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Tidak ada notifikasi baru hari ini.'),
+                              SnackBar(
+                                content: Text(
+                                  sync != null
+                                      ? 'Data terakhir disinkronkan ke database: ${_relativeTime(sync)}'
+                                      : 'Belum ada sinkronisasi data. Tarik ke bawah untuk sinkron.',
+                                ),
                               ),
                             );
                           },
@@ -152,6 +165,23 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ],
                 ),
+
+                // Indikator sinkronisasi database terakhir
+                if (network.lastSyncTime != null) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(Icons.sync_rounded,
+                          size: 12, color: AppTheme.textMuted),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Sinkron ke database: ${_relativeTime(network.lastSyncTime!)}',
+                        style: const TextStyle(
+                            fontSize: 10.5, color: AppTheme.textMuted),
+                      ),
+                    ],
+                  ),
+                ],
 
                 // Notifikasi Konektivitas Offline / Tanpa Internet
                 if (network.hasNoInternet) ...[
