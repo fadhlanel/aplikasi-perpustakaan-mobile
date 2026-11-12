@@ -1649,8 +1649,9 @@ class _ProfilScreenState extends State<ProfilScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildStatCard({
     required IconData icon,

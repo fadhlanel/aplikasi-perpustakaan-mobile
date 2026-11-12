@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/api_client.dart';
 import '../core/app_theme.dart';
 
 class BookCoverWidget extends StatelessWidget {
