@@ -43,7 +43,7 @@ class ApiClient {
     if (_envBaseUrl.isNotEmpty) return _envBaseUrl;
     if (_legacyBaseUrl.isNotEmpty) return _legacyBaseUrl;
     // Produksi: Back4App Containers.
-    return 'https://restapiperpustakaan2-bw2d4htv.back4.app/api/v1';
+    return 'https://restapiperpustakaan2-x57pjdou.back4.app/api/v1';
   }
 
   /// Token login siswa dari `POST /login`; dikirim sebagai bearer token.
