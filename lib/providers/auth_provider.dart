@@ -167,7 +167,9 @@ class AuthProvider extends ChangeNotifier {
     ApiClient.authToken = null;
     _profile = const UserProfile(nama: 'Tamu Perpustakaan', nis: '-', kelas: '-', sekolah: AppConstants.schoolName, isVerified: false, badge: 'Anggota Baru', bukuDibacaCount: 0, bukuAktifCount: 0, dendaCount: 0);
     final prefs = await SharedPreferences.getInstance();
-    for (final key in [_keyIsLoggedIn, _keyNis, _keyName, _keyKelas, _keySekolah, _keyToken]) await prefs.remove(key);
+    for (final key in [_keyIsLoggedIn, _keyNis, _keyName, _keyKelas, _keySekolah, _keyToken]) {
+      await prefs.remove(key);
+    }
     notifyListeners();
   }
 
