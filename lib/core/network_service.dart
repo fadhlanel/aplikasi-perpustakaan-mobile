@@ -1,8 +1,8 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
+
 import 'api_client.dart';
 import 'offline_cache.dart';
 
@@ -67,7 +67,8 @@ class NetworkService extends ChangeNotifier with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       checkConnection();
       _startPeriodicCheck();
-    } else if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
       _timer?.cancel();
     }
   }
@@ -130,28 +131,25 @@ class NetworkService extends ChangeNotifier with WidgetsBindingObserver {
       return _status;
     }
 
-    // 2. Internet ada, sekarang cek apakah REST API kita bisa dihubungi
+    // 2. Validasi endpoint data nyata. Health endpoint saja tidak cukup:
+    // server bisa hidup, tetapi API/database gagal melayani aplikasi.
     try {
       final res = await http
-          .get(healthUri, headers: const {'Accept': 'application/json'})
+          .get(
+            Uri.parse('${ApiClient.baseUrl}/buku?per_page=1'),
+            headers: const {'Accept': 'application/json'},
+          )
           .timeout(_probeTimeout);
 
-      // /api mengembalikan 200 saat aplikasi dan database siap,
-      // 503 saat database tidak tersedia. Keduanya berarti server terjangkau.
-      if (res.statusCode == 200) {
+      if (res.statusCode >= 200 && res.statusCode < 300) {
         _status = ConnectionStatus.connected;
         _lastError = null;
         await _syncBukuData();
-      } else if (res.statusCode >= 500) {
-        _status = ConnectionStatus.apiOffline;
-        _lastError = _healthMessage(res) ??
-            'Server API mengembalikan kode ${res.statusCode}.';
       } else {
-        // 404/405: endpoint health belum ada, tapi server merespons.
-        _status = ConnectionStatus.connected;
-        _lastError = null;
+        _status = ConnectionStatus.apiOffline;
+        _lastError = 'Server API mengembalikan kode ${res.statusCode}.';
       }
-    } catch (e) {
+    } catch (_) {
       _status = ConnectionStatus.apiOffline;
       _lastError =
           'Server REST API (${ApiClient.baseUrl}) tidak dapat dijangkau.';
@@ -174,15 +172,5 @@ class NetworkService extends ChangeNotifier with WidgetsBindingObserver {
     } catch (_) {
       // Sinkronisasi gagal tidak mengubah status koneksi; data lama tetap dipakai.
     }
-  }
-
-  String? _healthMessage(http.Response res) {
-    try {
-      final body = jsonDecode(utf8.decode(res.bodyBytes));
-      if (body is Map<String, dynamic> && body['database'] == 'unavailable') {
-        return 'Server API aktif, tetapi database tidak tersedia.';
-      }
-    } catch (_) {}
-    return null;
   }
 }

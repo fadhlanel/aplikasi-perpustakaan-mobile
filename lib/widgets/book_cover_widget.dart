@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../core/api_client.dart';
+
 import '../core/app_theme.dart';
 
 class BookCoverWidget extends StatelessWidget {
@@ -26,11 +26,7 @@ class BookCoverWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String? resolvedUrl = sampulUrl;
-    if (resolvedUrl != null && !resolvedUrl.startsWith('http') && resolvedUrl.isNotEmpty) {
-      final base = ApiClient.baseUrl.replaceFirst(RegExp(r'/api/v1/?$'), '');
-      resolvedUrl = '$base/storage/$resolvedUrl';
-    }
+    final resolvedUrl = sampulUrl?.trim();
 
     if (resolvedUrl != null && resolvedUrl.startsWith('http')) {
       return Container(
@@ -63,7 +59,9 @@ class BookCoverWidget extends StatelessWidget {
   Widget _buildStyledCover() {
     final colors = gradientColors ?? _pickGradient(judul);
     final spineWidth = width.isFinite ? (width * 0.08).clamp(6.0, 14.0) : 10.0;
-    final leftPadding = width.isFinite ? (width * 0.14).clamp(10.0, 18.0) : 14.0;
+    final leftPadding = width.isFinite
+        ? (width * 0.14).clamp(10.0, 18.0)
+        : 14.0;
     final isSmall = height < 90 || (width.isFinite && width < 70);
 
     return Container(
@@ -94,7 +92,9 @@ class BookCoverWidget extends StatelessWidget {
             width: spineWidth,
             child: Container(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.horizontal(left: Radius.circular(borderRadius)),
+                borderRadius: BorderRadius.horizontal(
+                  left: Radius.circular(borderRadius),
+                ),
                 gradient: LinearGradient(
                   colors: [
                     Colors.black.withValues(alpha: 0.25),
@@ -106,14 +106,24 @@ class BookCoverWidget extends StatelessWidget {
           ),
           // Book Title & Content
           Padding(
-            padding: EdgeInsets.fromLTRB(leftPadding, isSmall ? 6 : 10, 8, isSmall ? 6 : 8),
+            padding: EdgeInsets.fromLTRB(
+              leftPadding,
+              isSmall ? 6 : 10,
+              8,
+              isSmall ? 6 : 8,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: isSmall ? MainAxisAlignment.center : MainAxisAlignment.start,
+              mainAxisAlignment: isSmall
+                  ? MainAxisAlignment.center
+                  : MainAxisAlignment.start,
               children: [
                 if (!isSmall) ...[
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(4),
@@ -136,7 +146,9 @@ class BookCoverWidget extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: isSmall ? 8.5 : (width.isFinite && width < 90 ? 10 : 12),
+                    fontSize: isSmall
+                        ? 8.5
+                        : (width.isFinite && width < 90 ? 10 : 12),
                     fontWeight: FontWeight.bold,
                     height: 1.15,
                   ),

@@ -4,6 +4,8 @@ class UserProfile {
     required this.nis,
     required this.kelas,
     required this.sekolah,
+    this.email,
+    this.telepon,
     this.isVerified = true,
     this.badge = 'Peminjam Teladan',
     this.bukuDibacaCount = 12,
@@ -16,6 +18,8 @@ class UserProfile {
   final String nis;
   final String kelas;
   final String sekolah;
+  final String? email;
+  final String? telepon;
   final bool isVerified;
   final String badge;
   final int bukuDibacaCount;
@@ -28,6 +32,8 @@ class UserProfile {
     String? nis,
     String? kelas,
     String? sekolah,
+    String? email,
+    String? telepon,
     bool? isVerified,
     String? badge,
     int? bukuDibacaCount,
@@ -40,6 +46,8 @@ class UserProfile {
       nis: nis ?? this.nis,
       kelas: kelas ?? this.kelas,
       sekolah: sekolah ?? this.sekolah,
+      email: email ?? this.email,
+      telepon: telepon ?? this.telepon,
       isVerified: isVerified ?? this.isVerified,
       badge: badge ?? this.badge,
       bukuDibacaCount: bukuDibacaCount ?? this.bukuDibacaCount,
