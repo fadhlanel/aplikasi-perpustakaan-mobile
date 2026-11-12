@@ -15,6 +15,7 @@ class AuthProvider extends ChangeNotifier {
   static const String _keyName = 'student_name';
   static const String _keyKelas = 'student_kelas';
   static const String _keySekolah = 'student_sekolah';
+  static const String _keyToken = 'auth_token';
 
   bool _isLoggedIn = false;
   bool _isLoading = true;
@@ -34,16 +35,27 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
     try {
       final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString(_keyToken);
       final nis = prefs.getString(_keyNis);
       final name = prefs.getString(_keyName);
       final kelas = prefs.getString(_keyKelas);
       _isLoggedIn = prefs.getBool(_keyIsLoggedIn) == true &&
+          token != null &&
+          token.isNotEmpty &&
           nis != null && nis.isNotEmpty && name != null && name.isNotEmpty;
-      if (_isLoggedIn) {
+      if (!_isLoggedIn) {
+        // Sesi tanpa token berasal dari login lama yang tidak lolos backend;
+        // paksa login ulang agar data siswa selalu sinkron dengan database.
+        for (final key in [_keyIsLoggedIn, _keyNis, _keyName, _keyKelas, _keySekolah]) {
+          await prefs.remove(key);
+        }
+      } else {
+        ApiClient.authToken = token;
         _profile = UserProfile(
           nis: nis!, nama: name!, kelas: kelas ?? '-',
           sekolah: prefs.getString(_keySekolah) ?? AppConstants.schoolName,
         );
+        await _refreshProfile();
       }
     } catch (_) {
       _isLoggedIn = false;
@@ -53,17 +65,52 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Validasi sesi tersimpan ke backend: data terbaru dipakai, token mati
+  /// (401) menghapus sesi, dan kegagalan jaringan membiarkan sesi offline.
+  Future<void> _refreshProfile() async {
+    try {
+      final response = await ApiClient.getJson('/profile');
+      final raw = response['data'] is Map ? response['data'] : response;
+      final member = raw['siswa'] is Map ? raw['siswa'] : raw;
+      _profile = UserProfile(
+        nis: _text(member['nis'], fallback: _profile.nis),
+        nama: _text(member['nama'], fallback: _profile.nama),
+        kelas: _text(member['kelas'], fallback: '-'),
+        sekolah: _text(member['sekolah'], fallback: AppConstants.schoolName),
+        isVerified: true,
+        bukuDibacaCount: _number(member['buku_dibaca'] ?? member['bukuDibacaCount']),
+        bukuAktifCount: _number(member['buku_aktif'] ?? member['bukuAktifCount']),
+        dendaCount: _number(member['denda'] ?? member['dendaCount']),
+      );
+      await _saveSession();
+    } on ApiException catch (e) {
+      if (e.statusCode == 401) {
+        ApiClient.authToken = null;
+        _isLoggedIn = false;
+        _profile = const UserProfile(nama: 'Tamu Perpustakaan', nis: '-', kelas: '-', sekolah: AppConstants.schoolName, isVerified: false, badge: 'Anggota Baru', bukuDibacaCount: 0, bukuAktifCount: 0, dendaCount: 0);
+        final prefs = await SharedPreferences.getInstance();
+        for (final key in [_keyIsLoggedIn, _keyNis, _keyName, _keyKelas, _keySekolah, _keyToken]) {
+          await prefs.remove(key);
+        }
+      }
+    }
+  }
+
   Future<bool> login({required String nis, required String pin, bool rememberMe = true}) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
     try {
-      final response = await ApiClient.postJson('/siswa/login', body: {
+      final response = await ApiClient.postJson('/login', body: {
         'nis': nis.trim(),
         'pin': pin.trim(),
       });
       final raw = response['data'] is Map ? response['data'] : response;
+      final token = _text(raw['token']);
       final member = raw['siswa'] is Map ? raw['siswa'] : raw['anggota'] is Map ? raw['anggota'] : raw['user'] is Map ? raw['user'] : raw;
+      if (token.isEmpty) {
+        throw ApiException('Respons login siswa tidak valid.');
+      }
       if (member is! Map || _text(member['nis']).isEmpty || _text(member['nama']).isEmpty) {
         throw ApiException('Respons login siswa tidak valid.');
       }
@@ -76,6 +123,7 @@ class AuthProvider extends ChangeNotifier {
         dendaCount: _number(member['denda'] ?? member['dendaCount']),
       );
       _isLoggedIn = true;
+      ApiClient.authToken = token;
       if (rememberMe) {
         await _saveSession();
       } else {
@@ -106,15 +154,20 @@ class AuthProvider extends ChangeNotifier {
     await prefs.setString(_keyName, _profile.nama);
     await prefs.setString(_keyKelas, _profile.kelas);
     await prefs.setString(_keySekolah, _profile.sekolah);
+    final token = ApiClient.authToken;
+    if (token != null) {
+      await prefs.setString(_keyToken, token);
+    }
   }
 
   Future<bool> changePin(String oldPin, String newPin) async => false;
 
   Future<void> logout() async {
     _isLoggedIn = false;
+    ApiClient.authToken = null;
     _profile = const UserProfile(nama: 'Tamu Perpustakaan', nis: '-', kelas: '-', sekolah: AppConstants.schoolName, isVerified: false, badge: 'Anggota Baru', bukuDibacaCount: 0, bukuAktifCount: 0, dendaCount: 0);
     final prefs = await SharedPreferences.getInstance();
-    for (final key in [_keyIsLoggedIn, _keyNis, _keyName, _keyKelas, _keySekolah]) await prefs.remove(key);
+    for (final key in [_keyIsLoggedIn, _keyNis, _keyName, _keyKelas, _keySekolah, _keyToken]) await prefs.remove(key);
     notifyListeners();
   }
 

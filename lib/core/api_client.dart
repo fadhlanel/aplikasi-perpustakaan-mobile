@@ -46,12 +46,15 @@ class ApiClient {
     return 'https://restapiperpustakaan-pygvgcge.back4.app/api/v1';
   }
 
-  /// Proyek belum memakai autentikasi token; backend tidak punya Sanctum.
-  /// Sisipkan header Authorization di sini bila nanti ditambahkan.
-  static const Map<String, String> _headers = {
-    'Accept': 'application/json',
-    'Content-Type': 'application/json',
-  };
+  /// Token login siswa dari `POST /login`; dikirim sebagai bearer token.
+  /// `null` saat pengguna belum masuk.
+  static String? authToken;
+
+  static Map<String, String> get _headers => {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        if (authToken != null) 'Authorization': 'Bearer $authToken',
+      };
 
   static Future<Map<String, dynamic>> getJson(
     String path, {
