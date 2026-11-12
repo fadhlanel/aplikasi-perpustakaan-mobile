@@ -3,7 +3,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
-/// Base URL terpusat. Default langsung ke API produksi Back4App, jadi
+/// Base URL terpusat. Default langsung ke API produksi Cloudways, jadi
 /// `flutter run` / build APK tanpa parameter apa pun sudah memakai produksi.
 /// Untuk development lokal, override:
 ///   --dart-define=API_BASE_URL=http://10.0.2.2:8000/api/v1
@@ -42,8 +42,8 @@ class ApiClient {
   static String get baseUrl {
     if (_envBaseUrl.isNotEmpty) return _envBaseUrl;
     if (_legacyBaseUrl.isNotEmpty) return _legacyBaseUrl;
-    // Produksi: Back4App Containers.
-    return 'https://restapiperpustakaan3-canedjar.back4.app/api/v1';
+    // Produksi: Cloudways (MariaDB).
+    return 'https://phplaravel-1688054-6782384.cloudwaysapps.com/api/v1';
   }
 
   /// Token login siswa dari `POST /login`; dikirim sebagai bearer token.
