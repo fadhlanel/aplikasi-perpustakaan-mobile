@@ -5,6 +5,7 @@ import 'core/app_theme.dart';
 import 'core/network_service.dart';
 import 'providers/auth_provider.dart';
 import 'providers/buku_provider.dart';
+import 'providers/config_provider.dart';
 import 'providers/pengumuman_provider.dart';
 import 'providers/pinjaman_provider.dart';
 import 'providers/riwayat_provider.dart';
@@ -26,6 +27,7 @@ class PustakaDigitalApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => BukuProvider()),
         ChangeNotifierProvider(create: (_) => PengumumanProvider()),
+        ChangeNotifierProvider(create: (_) => ConfigProvider()),
         ChangeNotifierProvider(create: (_) => PinjamanProvider()),
         ChangeNotifierProvider(create: (_) => RiwayatProvider()),
       ],

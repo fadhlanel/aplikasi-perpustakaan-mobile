@@ -26,7 +26,7 @@ class Buku {
       deskripsi: json['deskripsi']?.toString(),
       tahunTerbit: (json['tahun_terbit'] as num?)?.toInt() ?? 2023,
       isbn: json['isbn']?.toString() ?? '978-602-05-1234-5',
-      sampul: json['sampul']?.toString(),
+      sampul: json['sampul_url']?.toString() ?? json['sampul']?.toString(),
       stok: (json['stok'] as num?)?.toInt() ?? 10,
       stokTersedia: (json['stok_tersedia'] as num?)?.toInt() ?? 8,
       kategori: json['kategori'] is Map<String, dynamic>

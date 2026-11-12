@@ -6,6 +6,7 @@ import '../core/network_service.dart';
 import '../models/buku.dart';
 import '../providers/auth_provider.dart';
 import '../providers/buku_provider.dart';
+import '../providers/config_provider.dart';
 import '../providers/pengumuman_provider.dart';
 import '../providers/pinjaman_provider.dart';
 import '../widgets/api_status_badge.dart';
@@ -33,7 +34,10 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) context.read<PengumumanProvider>().ensureLoaded();
+      if (mounted) {
+        context.read<PengumumanProvider>().ensureLoaded();
+        context.read<ConfigProvider>().load();
+      }
     });
   }
 
@@ -64,6 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final auth = context.watch<AuthProvider>();
     final bukuProv = context.watch<BukuProvider>();
     final pengumumanProv = context.watch<PengumumanProvider>();
+    final config = context.watch<ConfigProvider>();
     final pinjamanProv = context.watch<PinjamanProvider>();
     final network = context.watch<NetworkService>();
     final profile = auth.profile;
@@ -78,6 +83,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: RefreshIndicator(
           onRefresh: () async {
             await network.checkConnection();
+            await config.load();
             await bukuProv.loadFirst();
             await pengumumanProv.load();
             await pinjamanProv.fetchApiLoans();
@@ -109,19 +115,19 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         const SizedBox(width: 10),
-                        const Column(
+                        Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'PUSTAKADIGITAL',
-                              style: TextStyle(
+                              config.namaPerpustakaan.toUpperCase(),
+                              style: const TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 0.8,
                                 color: AppTheme.textMuted,
                               ),
                             ),
-                            Text(
+                            const Text(
                               'Beranda',
                               style: TextStyle(
                                 fontSize: 18,
@@ -190,6 +196,31 @@ class _HomeScreenState extends State<HomeScreen> {
                         'Sinkron ke database: ${_relativeTime(network.lastSyncTime!)}',
                         style: const TextStyle(
                             fontSize: 10.5, color: AppTheme.textMuted),
+                      ),
+                      const Spacer(),
+                      // Status Layanan Perpustakaan dari Web Admin
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: config.statusLayanan == 'aktif'
+                              ? const Color(0xFFD1FAE5)
+                              : config.statusLayanan == 'pemeliharaan'
+                                  ? const Color(0xFFFEF3C7)
+                                  : const Color(0xFFFEE2E2),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          config.statusLabel,
+                          style: TextStyle(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.bold,
+                            color: config.statusLayanan == 'aktif'
+                                ? const Color(0xFF065F46)
+                                : config.statusLayanan == 'pemeliharaan'
+                                    ? const Color(0xFF92400E)
+                                    : const Color(0xFF991B1B),
+                          ),
+                        ),
                       ),
                     ],
                   ),

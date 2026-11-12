@@ -25,7 +25,13 @@ class BookCoverWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (sampulUrl != null && sampulUrl!.startsWith('http')) {
+    String? resolvedUrl = sampulUrl;
+    if (resolvedUrl != null && !resolvedUrl.startsWith('http') && resolvedUrl.isNotEmpty) {
+      final base = ApiClient.baseUrl.replaceFirst(RegExp(r'/api/v1/?$'), '');
+      resolvedUrl = '$base/storage/$resolvedUrl';
+    }
+
+    if (resolvedUrl != null && resolvedUrl.startsWith('http')) {
       return Container(
         width: width,
         height: height,
@@ -42,7 +48,7 @@ class BookCoverWidget extends StatelessWidget {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(borderRadius),
           child: Image.network(
-            sampulUrl!,
+            resolvedUrl,
             fit: BoxFit.cover,
             errorBuilder: (_, error, stack) => _buildStyledCover(),
           ),
