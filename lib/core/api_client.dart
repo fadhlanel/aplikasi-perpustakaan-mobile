@@ -50,11 +50,16 @@ class ApiClient {
   /// `null` saat pengguna belum masuk.
   static String? authToken;
 
+  /// Dipanggil oleh AuthProvider saat inisialisasi. Saat API mengembalikan 401
+  /// (token anggota di-reset oleh admin), callback ini menghapus sesi lokal
+  /// dan mengembalikan pengguna ke halaman login.
+  static void Function()? onUnauthorized;
+
   static Map<String, String> get _headers => {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        if (authToken != null) 'Authorization': 'Bearer $authToken',
-      };
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+    if (authToken != null) 'Authorization': 'Bearer $authToken',
+  };
 
   static Future<Map<String, dynamic>> getJson(
     String path, {
@@ -62,10 +67,7 @@ class ApiClient {
   }) async {
     var uri = Uri.parse('$baseUrl$path');
     if (query != null && query.isNotEmpty) {
-      uri = uri.replace(queryParameters: {
-        ...uri.queryParameters,
-        ...query,
-      });
+      uri = uri.replace(queryParameters: {...uri.queryParameters, ...query});
     }
     return _send(() => http.get(uri, headers: _headers));
   }
@@ -125,7 +127,12 @@ class ApiClient {
       return body ?? <String, dynamic>{};
     }
 
-    final message = body?['message'] as String? ?? _defaultMessage(res.statusCode);
+    if (res.statusCode == 401) {
+      onUnauthorized?.call();
+    }
+
+    final message =
+        body?['message'] as String? ?? _defaultMessage(res.statusCode);
     final errors = body?['errors'];
     throw ApiException(
       message,

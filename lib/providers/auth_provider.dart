@@ -40,6 +40,7 @@ class AuthProvider extends ChangeNotifier {
   Future<void> initSession() async {
     _isLoading = true;
     notifyListeners();
+    ApiClient.onUnauthorized = _onUnauthorized;
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString(_keyToken);
@@ -110,30 +111,7 @@ class AuthProvider extends ChangeNotifier {
       await _saveSession();
     } on ApiException catch (e) {
       if (e.statusCode == 401) {
-        ApiClient.authToken = null;
-        _isLoggedIn = false;
-        _profile = const UserProfile(
-          nama: 'Tamu Perpustakaan',
-          nis: '-',
-          kelas: '-',
-          sekolah: AppConstants.schoolName,
-          isVerified: false,
-          badge: 'Anggota Baru',
-          bukuDibacaCount: 0,
-          bukuAktifCount: 0,
-          dendaCount: 0,
-        );
-        final prefs = await SharedPreferences.getInstance();
-        for (final key in [
-          _keyIsLoggedIn,
-          _keyNis,
-          _keyName,
-          _keyKelas,
-          _keySekolah,
-          _keyToken,
-        ]) {
-          await prefs.remove(key);
-        }
+        _onUnauthorized();
       }
     }
   }
@@ -305,6 +283,38 @@ class AuthProvider extends ChangeNotifier {
       await prefs.remove(key);
     }
     notifyListeners();
+  }
+
+  void _onUnauthorized() {
+    _isLoggedIn = false;
+    ApiClient.authToken = null;
+    _profile = const UserProfile(
+      nama: 'Tamu Perpustakaan',
+      nis: '-',
+      kelas: '-',
+      sekolah: AppConstants.schoolName,
+      isVerified: false,
+      badge: 'Anggota Baru',
+      bukuDibacaCount: 0,
+      bukuAktifCount: 0,
+      dendaCount: 0,
+    );
+    _clearSession();
+    notifyListeners();
+  }
+
+  Future<void> _clearSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    for (final key in [
+      _keyIsLoggedIn,
+      _keyNis,
+      _keyName,
+      _keyKelas,
+      _keySekolah,
+      _keyToken,
+    ]) {
+      await prefs.remove(key);
+    }
   }
 
   static String _text(dynamic value, {String fallback = ''}) =>
