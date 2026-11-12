@@ -160,7 +160,41 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> changePin(String oldPin, String newPin) async => false;
+  Future<void> refreshProfile() => _refreshProfile();
+
+  Future<bool> updateProfile({String? nama, String? email, String? telepon, String? pin}) async {
+    try {
+      final body = <String, dynamic>{
+        if (nama != null && nama.trim().isNotEmpty) 'nama': nama.trim(),
+        if (email != null) 'email': email.trim(),
+        if (telepon != null) 'telepon': telepon.trim(),
+        if (pin != null && pin.trim().isNotEmpty) 'pin': pin.trim(),
+      };
+      final res = await ApiClient.putJson('/profile', body: body);
+      final raw = res['data'] is Map ? res['data'] : res;
+      final member = raw['siswa'] is Map ? raw['siswa'] : raw;
+      if (member is Map) {
+        _profile = UserProfile(
+          nis: _text(member['nis'], fallback: _profile.nis),
+          nama: _text(member['nama'], fallback: _profile.nama),
+          kelas: _text(member['kelas'], fallback: _profile.kelas),
+          sekolah: _profile.sekolah,
+          isVerified: _profile.isVerified,
+          bukuDibacaCount: _profile.bukuDibacaCount,
+          bukuAktifCount: _profile.bukuAktifCount,
+          dendaCount: _profile.dendaCount,
+        );
+        await _saveSession();
+        notifyListeners();
+        return true;
+      }
+    } catch (_) {}
+    return false;
+  }
+
+  Future<bool> changePin(String oldPin, String newPin) async {
+    return updateProfile(pin: newPin);
+  }
 
   Future<void> logout() async {
     _isLoggedIn = false;

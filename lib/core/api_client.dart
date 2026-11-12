@@ -80,6 +80,16 @@ class ApiClient {
     );
   }
 
+  static Future<Map<String, dynamic>> putJson(
+    String path, {
+    Map<String, dynamic>? body,
+  }) {
+    final uri = Uri.parse('$baseUrl$path');
+    return _send(
+      () => http.put(uri, headers: _headers, body: jsonEncode(body ?? {})),
+    );
+  }
+
   static Future<Map<String, dynamic>> _send(
     Future<http.Response> Function() request,
   ) async {

@@ -12,8 +12,121 @@ import 'pinjaman_screen.dart';
 
 /// Screen 6: Profil Siswa Screen
 /// Sesuai Desain Figma (Foto 5) dengan seluruh menu fungsional dan anti-overflow
-class ProfilScreen extends StatelessWidget {
+class ProfilScreen extends StatefulWidget {
   const ProfilScreen({super.key});
+
+  @override
+  State<ProfilScreen> createState() => _ProfilScreenState();
+}
+
+class _ProfilScreenState extends State<ProfilScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<AuthProvider>().refreshProfile();
+      }
+    });
+  }
+
+  void _showEditProfileSheet(BuildContext context, AuthProvider auth) {
+    final namaController = TextEditingController(text: auth.profile.nama);
+    final formKey = GlobalKey<FormState>();
+    bool saving = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (dialogCtx, setSheetState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 16,
+                bottom: MediaQuery.of(dialogCtx).viewInsets.bottom + 20,
+              ),
+              child: Form(
+                key: formKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade400,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Row(
+                        children: [
+                          Icon(Icons.edit_note_rounded, color: AppTheme.accentBlue, size: 24),
+                          SizedBox(width: 10),
+                          Text(
+                            'Edit Profil Siswa',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textDark),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Perbarui nama tampilan keanggotaan Anda (NIS: ${auth.profile.nis}).',
+                        style: const TextStyle(fontSize: 12, color: AppTheme.textMuted),
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: namaController,
+                        decoration: const InputDecoration(
+                          labelText: 'Nama Lengkap',
+                          prefixIcon: Icon(Icons.person_outline_rounded),
+                        ),
+                        validator: (v) => v == null || v.trim().isEmpty ? 'Nama wajib diisi' : null,
+                      ),
+                      const SizedBox(height: 20),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: ElevatedButton(
+                          onPressed: saving
+                              ? null
+                              : () async {
+                                  if (!formKey.currentState!.validate()) return;
+                                  setSheetState(() => saving = true);
+                                  final ok = await auth.updateProfile(nama: namaController.text);
+                                  if (ctx.mounted) Navigator.of(ctx).pop();
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(ok ? 'Profil berhasil diperbarui!' : 'Gagal memperbarui profil.'),
+                                        backgroundColor: ok ? const Color(0xFF047857) : AppTheme.dangerRed,
+                                      ),
+                                    );
+                                  }
+                                },
+                          child: Text(saving ? 'Menyimpan...' : 'Simpan Profil', style: const TextStyle(fontWeight: FontWeight.bold)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
 
   void _handleLogout(BuildContext context, AuthProvider auth) {
     showDialog(
@@ -699,6 +812,25 @@ class ProfilScreen extends StatelessWidget {
                     const SizedBox(height: 16),
                     ListTile(
                       contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.edit_note_rounded, color: AppTheme.accentBlue),
+                      title: Text(
+                        'Edit Data Profil',
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? AppTheme.darkTextPrimary : AppTheme.textDark,
+                        ),
+                      ),
+                      subtitle: const Text('Perbarui nama dan data akun Anda', style: TextStyle(fontSize: 11, color: AppTheme.textMuted)),
+                      trailing: const Icon(Icons.chevron_right_rounded, color: AppTheme.textSubtle),
+                      onTap: () {
+                        Navigator.of(ctx).pop();
+                        _showEditProfileSheet(context, auth);
+                      },
+                    ),
+                    const Divider(height: 1),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
                       leading: const Icon(Icons.lock_reset_rounded, color: AppTheme.primaryNavy),
                       title: Text(
                         'Ganti PIN / Kata Sandi',
@@ -961,11 +1093,17 @@ class ProfilScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: isDark ? AppTheme.darkBackground : AppTheme.background,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        child: RefreshIndicator(
+          onRefresh: () async {
+            await auth.refreshProfile();
+            await pinjaman.fetchApiLoans();
+          },
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
               // Header PUSTAKADIGITAL - Profil Siswa
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1100,15 +1238,42 @@ class ProfilScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 6),
-                          Text(
-                            profile.nama,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: isDark ? AppTheme.darkTextPrimary : AppTheme.textDark,
-                            ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  profile.nama,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark ? AppTheme.darkTextPrimary : AppTheme.textDark,
+                                  ),
+                                ),
+                              ),
+                              InkWell(
+                                onTap: () => _showEditProfileSheet(context, auth),
+                                borderRadius: BorderRadius.circular(8),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: Colors.blue.shade100),
+                                  ),
+                                  child: const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.edit_rounded, size: 12, color: AppTheme.primaryNavy),
+                                      SizedBox(width: 4),
+                                      Text('Edit', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: AppTheme.primaryNavy)),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 2),
                           Text(
