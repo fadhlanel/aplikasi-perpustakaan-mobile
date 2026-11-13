@@ -180,7 +180,7 @@ class _KatalogScreenState extends State<KatalogScreen> {
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontSize: 10.5, color: AppTheme.textMuted),
             ),
-            const Spacer(),
+            const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [

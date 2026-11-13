@@ -589,7 +589,7 @@ class _PinjamanScreenState extends State<PinjamanScreen> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Row(mainAxisAlignment: MainAxisAlignment.center, children: List.generate(5, (index) => IconButton(
+              Wrap(alignment: WrapAlignment.center, spacing: 8, children: List.generate(5, (index) => IconButton(
                 onPressed: () => setState(() => rating = index + 1),
                 icon: Icon(index < rating ? Icons.star : Icons.star_border, color: Colors.amber),
               ))),
