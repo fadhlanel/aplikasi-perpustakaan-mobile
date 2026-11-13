@@ -279,8 +279,7 @@ class _FilterBar extends StatelessWidget {
     final categories = <DropdownMenuItem<int>>[
       const DropdownMenuItem<int>(value: -1, child: Text('Semua Kategori')),
       ...prov.kategoris
-          .map((k) => DropdownMenuItem<int>(value: k.id, child: Text(k.nama)))
-          .toList(),
+          .map((k) => DropdownMenuItem<int>(value: k.id, child: Text(k.nama))),
     ];
 
     return Padding(

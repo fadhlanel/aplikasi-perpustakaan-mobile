@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../core/app_theme.dart';
 import '../core/network_service.dart';
 import '../models/buku.dart';
+import '../models/peminjaman.dart';
 import '../providers/auth_provider.dart';
 import '../providers/buku_provider.dart';
 import '../providers/config_provider.dart';
@@ -55,7 +56,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final provider = context.read<PinjamanProvider>();
     final loan = provider.historyLoans.firstWhere(
       (item) => item.rating == null && !_ratingPrompted.contains(item.id),
-      orElse: () => const Peminjaman(id: -1, trxId: '', namaPeminjam: '', nis: '', bukuId: -1, judulBuku: '', tanggalPinjam: '', tanggalJatuhTempo: '', status: 'none'),
+      orElse: () => Peminjaman(id: -1, trxId: '', namaPeminjam: '', nis: '', bukuId: -1, judulBuku: '', tanggalPinjam: '', tanggalJatuhTempo: '', status: 'none'),
     );
     if (loan.id < 0) return;
     _ratingPrompted.add(loan.id);
