@@ -193,17 +193,25 @@ class BukuProvider extends ChangeNotifier {
 
   void setQuery(String q) {
     query = q;
+    currentPage = 1;
+    notifyListeners();
     loadFirst();
   }
 
   void pilihKategori(int? id) {
     kategoriId = id;
+    selectedCategoryName = id == null ? 'Semua' : selectedCategoryName;
+    currentPage = 1;
+    notifyListeners();
     loadFirst();
   }
 
   void reset() {
     query = '';
     kategoriId = null;
+    selectedCategoryName = 'Semua';
+    currentPage = 1;
+    notifyListeners();
     loadFirst();
   }
 

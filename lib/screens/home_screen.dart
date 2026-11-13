@@ -468,7 +468,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   child: TextField(
                     controller: _searchController,
                     onSubmitted: (val) {
-                      bukuProv.query = val;
+                      bukuProv.setQuery(val.trim());
                       widget.onNavigateTab?.call(1);
                     },
                     decoration: InputDecoration(
@@ -736,7 +736,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       const SizedBox(width: 8),
                       _buildCategoryChip('Novel & Fiksi', Icons.auto_stories_outlined, bukuProv),
                       const SizedBox(width: 8),
-                      _buildCategoryChip('Sejarah', Icons.history_edu_rounded, bukuProv),
+                      _buildCategoryChip('Sejarah & Sosial', Icons.history_edu_rounded, bukuProv),
                     ],
                   ),
                 ),
