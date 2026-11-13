@@ -214,6 +214,30 @@ class PinjamanProvider extends ChangeNotifier {
     return success;
   }
 
+  Future<bool> submitRating({
+    required int peminjamanId,
+    required int rating,
+    String? komentar,
+  }) async {
+    try {
+      final response = await ApiClient.postJson(
+        '/peminjaman/$peminjamanId/rating',
+        body: {'rating': rating, if (komentar != null && komentar.trim().isNotEmpty) 'komentar': komentar.trim()},
+      );
+      final raw = response['data'];
+      if (raw is Map<String, dynamic>) {
+        final updated = Peminjaman.fromJson(raw);
+        historyLoans = historyLoans.map((item) => item.id == peminjamanId ? updated : item).toList();
+        notifyListeners();
+      }
+      return true;
+    } catch (e) {
+      error = e is ApiException ? e.message : 'Rating gagal disimpan.';
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<void> fetchApiLoans() async {
     activeLoans = <Peminjaman>[];
     historyLoans = <Peminjaman>[];

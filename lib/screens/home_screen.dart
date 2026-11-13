@@ -33,20 +33,71 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final TextEditingController _searchController = TextEditingController();
   Timer? _syncTimer;
   bool _syncing = false;
+  final Set<int> _ratingPrompted = <int>{};
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (mounted) {
         context.read<PengumumanProvider>().ensureLoaded();
         context.read<ConfigProvider>().load();
         context.read<BukuProvider>().loadFirst();
-        context.read<PinjamanProvider>().fetchApiLoans();
+        await context.read<PinjamanProvider>().fetchApiLoans();
+        if (mounted) await _promptPendingRating();
         _startSyncTimer();
       }
     });
+  }
+
+  Future<void> _promptPendingRating() async {
+    final provider = context.read<PinjamanProvider>();
+    final loan = provider.historyLoans.firstWhere(
+      (item) => item.rating == null && !_ratingPrompted.contains(item.id),
+      orElse: () => const Peminjaman(id: -1, trxId: '', namaPeminjam: '', nis: '', bukuId: -1, judulBuku: '', tanggalPinjam: '', tanggalJatuhTempo: '', status: 'none'),
+    );
+    if (loan.id < 0) return;
+    _ratingPrompted.add(loan.id);
+    var rating = 0;
+    final komentar = TextEditingController();
+    final submitted = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Beri rating buku'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Bagaimana pengalamanmu membaca "${loan.judulBuku}"?'),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(5, (index) => IconButton(
+                  tooltip: '${index + 1} bintang',
+                  onPressed: () => setState(() => rating = index + 1),
+                  icon: Icon(index < rating ? Icons.star : Icons.star_border, color: Colors.amber, size: 30),
+                )),
+              ),
+              TextField(controller: komentar, maxLines: 2, decoration: const InputDecoration(labelText: 'Komentar (opsional)')),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Nanti')),
+            ElevatedButton(
+              onPressed: rating == 0 ? null : () async {
+                final ok = await provider.submitRating(peminjamanId: loan.id, rating: rating, komentar: komentar.text);
+                if (dialogContext.mounted) Navigator.pop(dialogContext, ok);
+              },
+              child: const Text('Kirim rating'),
+            ),
+          ],
+        ),
+      ),
+    );
+    komentar.dispose();
+    if (submitted != true) _ratingPrompted.remove(loan.id);
   }
 
   void _startSyncTimer() {

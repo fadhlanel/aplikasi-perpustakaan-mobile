@@ -577,6 +577,43 @@ class _PinjamanScreenState extends State<PinjamanScreen> {
     );
   }
 
+  void _showRatingDialog(Peminjaman loan) {
+    var rating = loan.rating?.round() ?? 0;
+    final komentar = TextEditingController();
+    final provider = context.read<PinjamanProvider>();
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text(loan.rating == null ? 'Beri rating buku' : 'Ubah rating buku'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(mainAxisAlignment: MainAxisAlignment.center, children: List.generate(5, (index) => IconButton(
+                onPressed: () => setState(() => rating = index + 1),
+                icon: Icon(index < rating ? Icons.star : Icons.star_border, color: Colors.amber),
+              ))),
+              TextField(controller: komentar, maxLines: 2, decoration: const InputDecoration(labelText: 'Komentar (opsional)')),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Batal')),
+            ElevatedButton(
+              onPressed: rating == 0 ? null : () async {
+                final ok = await provider.submitRating(peminjamanId: loan.id, rating: rating, komentar: komentar.text);
+                if (dialogContext.mounted) {
+                  Navigator.pop(dialogContext);
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ok ? 'Rating tersimpan.' : 'Rating gagal disimpan.')));
+                }
+              },
+              child: const Text('Simpan'),
+            ),
+          ],
+        ),
+      ),
+    ).whenComplete(komentar.dispose);
+  }
+
   Widget _buildHistoryLoanCard(Peminjaman loan) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -632,6 +669,12 @@ class _PinjamanScreenState extends State<PinjamanScreen> {
                 Text(
                   'Dipinjam ${loan.tanggalPinjam} • Dikembalikan tepat waktu',
                   style: const TextStyle(fontSize: 10.5, color: Color(0xFF047857), fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: () => _showRatingDialog(loan),
+                  icon: Icon(loan.rating == null ? Icons.star_border : Icons.edit_outlined, size: 16),
+                  label: Text(loan.rating == null ? 'Beri rating' : 'Ubah rating'),
                 ),
               ],
             ),

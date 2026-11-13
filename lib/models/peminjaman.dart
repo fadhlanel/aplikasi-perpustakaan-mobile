@@ -16,6 +16,7 @@ class Peminjaman {
     required this.tanggalJatuhTempo,
     this.jumlahPerpanjangan = 0,
     required this.status,
+    this.rating,
     this.sisaHari = 4,
     this.hariBerjalan = 3,
     this.durasiHariTotal = 7,
@@ -65,6 +66,7 @@ class Peminjaman {
       hariBerjalan: (json['hari_berjalan'] as num?)?.toInt() ?? 3,
       durasiHariTotal: (json['durasi_hari_total'] as num?)?.toInt() ?? 7,
       bisaPerpanjang: json['bisa_perpanjang'] != false && status != 'dikembalikan',
+      rating: (json['ulasan'] is Map ? ((json['ulasan'] as Map)['rating'] as num?)?.toDouble() : null),
     );
   }
 
@@ -106,6 +108,7 @@ class Peminjaman {
   final String tanggalJatuhTempo;
   final int jumlahPerpanjangan;
   final String status;
+  final double? rating;
   final int sisaHari;
   final int hariBerjalan;
   final int durasiHariTotal;
@@ -143,6 +146,7 @@ class Peminjaman {
       tanggalJatuhTempo: _tambahHariKeTanggal(tanggalJatuhTempo, 1),
       jumlahPerpanjangan: jumlahPerpanjangan + 1,
       status: status,
+      rating: rating,
       sisaHari: sisaHari + 7,
       hariBerjalan: hariBerjalan,
       durasiHariTotal: durasiHariTotal + 7,
