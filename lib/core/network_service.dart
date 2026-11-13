@@ -24,7 +24,7 @@ class NetworkService extends ChangeNotifier with WidgetsBindingObserver {
   /// Interval pengecekan otomatis ke API.
   static const Duration checkInterval = Duration(seconds: 15);
 
-  static const Duration _probeTimeout = Duration(seconds: 8);
+  static const Duration _probeTimeout = Duration(seconds: 15);
 
   Timer? _timer;
   ConnectionStatus _status = ConnectionStatus.unknown;
@@ -131,12 +131,11 @@ class NetworkService extends ChangeNotifier with WidgetsBindingObserver {
       return _status;
     }
 
-    // 2. Validasi endpoint data nyata. Health endpoint saja tidak cukup:
-    // server bisa hidup, tetapi API/database gagal melayani aplikasi.
+    // 2. Validasi endpoint data nyata. Gunakan /config karena ringan dan stabil.
     try {
       final res = await http
           .get(
-            Uri.parse('${ApiClient.baseUrl}/buku?per_page=1'),
+            Uri.parse('${ApiClient.baseUrl}/config'),
             headers: const {'Accept': 'application/json'},
           )
           .timeout(_probeTimeout);

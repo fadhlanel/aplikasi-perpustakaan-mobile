@@ -56,7 +56,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final provider = context.read<PinjamanProvider>();
     final loan = provider.historyLoans.firstWhere(
       (item) => item.rating == null && !_ratingPrompted.contains(item.id),
-      orElse: () => Peminjaman(id: -1, trxId: '', namaPeminjam: '', nis: '', bukuId: -1, judulBuku: '', tanggalPinjam: '', tanggalJatuhTempo: '', status: 'none'),
+      orElse: () => Peminjaman(
+  id: 0,
+  trxId: 'DUMMY-000',
+  namaPeminjam: 'Sentinel',
+  nis: '0000.00.000',
+  bukuId: 0,
+  judulBuku: '',
+  tanggalPinjam: '-',
+  tanggalJatuhTempo: '-',
+  status: 'dipinjam',
+),
     );
     if (loan.id < 0) return;
     _ratingPrompted.add(loan.id);
