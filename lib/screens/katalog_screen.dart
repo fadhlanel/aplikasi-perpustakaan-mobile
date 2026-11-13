@@ -237,6 +237,7 @@ class _KatalogScreenState extends State<KatalogScreen> {
                                         child: BookCoverWidget(
                                           judul: buku.judul,
                                           penulis: buku.namaPenulis,
+                                          sampulUrl: buku.sampul,
                                           width: 150,
                                           height: 125,
                                           borderRadius: 10,

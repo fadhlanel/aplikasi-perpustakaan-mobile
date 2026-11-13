@@ -402,6 +402,7 @@ class _ProfilScreenState extends State<ProfilScreen> {
                                     BookCoverWidget(
                                       judul: buku.judul,
                                       penulis: buku.namaPenulis,
+                                      sampulUrl: buku.sampul,
                                       width: 48,
                                       height: 64,
                                       borderRadius: 6,

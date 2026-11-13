@@ -27,22 +27,37 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         context.read<PengumumanProvider>().ensureLoaded();
         context.read<ConfigProvider>().load();
+        context.read<BukuProvider>().loadFirst();
+        context.read<PinjamanProvider>().fetchApiLoans();
       }
     });
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed && mounted) {
+      context.read<BukuProvider>().loadFirst();
+      context.read<PinjamanProvider>().fetchApiLoans();
+      context.read<PengumumanProvider>().load();
+      context.read<ConfigProvider>().load();
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _searchController.dispose();
     super.dispose();
   }
@@ -520,6 +535,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             BookCoverWidget(
                               judul: activeLoan.judulBuku,
                               penulis: activeLoan.pengarang,
+                              sampulUrl: activeLoan.sampul,
                               width: 64,
                               height: 90,
                               borderRadius: 8,
@@ -885,6 +901,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: BookCoverWidget(
                     judul: buku.judul,
                     penulis: buku.namaPenulis,
+                    sampulUrl: buku.sampul,
                     width: 155,
                     height: 140,
                     borderRadius: 10,
@@ -1029,6 +1046,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: BookCoverWidget(
                     judul: buku.judul,
                     penulis: buku.namaPenulis,
+                    sampulUrl: buku.sampul,
                     width: 150,
                     height: 125,
                     borderRadius: 10,

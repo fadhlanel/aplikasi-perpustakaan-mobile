@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/api_client.dart';
 import '../core/app_theme.dart';
 
 class BookCoverWidget extends StatelessWidget {
@@ -24,11 +25,25 @@ class BookCoverWidget extends StatelessWidget {
   final List<Color>? gradientColors;
   final double elevation;
 
+  /// Terima URL sampul baik absolut (http/https) maupun relatif
+  /// (mis. `/api/v1/buku/1/sampul`). URL relatif digabung dengan origin
+  /// `ApiClient.baseUrl` agar `Image.network` tetap dapat memuat gambar.
+  static Uri? _resolveCoverUrl(String? raw) {
+    if (raw == null) return null;
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty) return null;
+    final uri = Uri.tryParse(trimmed);
+    if (uri == null) return null;
+    if (uri.isAbsolute) return uri;
+    final base = Uri.parse(ApiClient.baseUrl);
+    return base.replace(path: trimmed, query: null);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final resolvedUrl = sampulUrl?.trim();
+    final resolvedUrl = _resolveCoverUrl(sampulUrl);
 
-    if (resolvedUrl != null && resolvedUrl.startsWith('http')) {
+    if (resolvedUrl != null) {
       return Container(
         width: width,
         height: height,
@@ -45,7 +60,7 @@ class BookCoverWidget extends StatelessWidget {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(borderRadius),
           child: Image.network(
-            resolvedUrl,
+            resolvedUrl.toString(),
             fit: BoxFit.cover,
             errorBuilder: (_, error, stack) => _buildStyledCover(),
           ),

@@ -400,6 +400,7 @@ class _PinjamanScreenState extends State<PinjamanScreen> {
               BookCoverWidget(
                 judul: loan.judulBuku,
                 penulis: loan.pengarang,
+                sampulUrl: loan.sampul,
                 width: 72,
                 height: 105,
                 borderRadius: 8,
@@ -591,6 +592,7 @@ class _PinjamanScreenState extends State<PinjamanScreen> {
           BookCoverWidget(
             judul: loan.judulBuku,
             penulis: loan.pengarang,
+            sampulUrl: loan.sampul,
             width: 54,
             height: 76,
             borderRadius: 6,

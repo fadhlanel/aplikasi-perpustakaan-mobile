@@ -91,6 +91,7 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
               child: BookCoverWidget(
                 judul: buku.judul,
                 penulis: buku.namaPenulis,
+                sampulUrl: buku.sampul,
                 width: 170,
                 height: 240,
                 borderRadius: 14,
@@ -373,6 +374,7 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
                           BookCoverWidget(
                             judul: related.judul,
                             penulis: related.namaPenulis,
+                            sampulUrl: related.sampul,
                             width: 110,
                             height: 130,
                             borderRadius: 8,
