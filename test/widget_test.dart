@@ -7,6 +7,7 @@ import 'package:pustaka_digital/core/network_service.dart';
 import 'package:pustaka_digital/models/pengumuman.dart';
 import 'package:pustaka_digital/providers/auth_provider.dart';
 import 'package:pustaka_digital/providers/buku_provider.dart';
+import 'package:pustaka_digital/providers/config_provider.dart';
 import 'package:pustaka_digital/providers/pengumuman_provider.dart';
 import 'package:pustaka_digital/providers/pinjaman_provider.dart';
 import 'package:pustaka_digital/screens/detail_buku_screen.dart';
@@ -24,6 +25,7 @@ Widget createTestApp(Widget child) {
       ChangeNotifierProvider(create: (_) => NetworkService()),
       ChangeNotifierProvider(create: (_) => AuthProvider()),
       ChangeNotifierProvider(create: (_) => BukuProvider()),
+      ChangeNotifierProvider(create: (_) => ConfigProvider()),
       ChangeNotifierProvider(create: (_) => PengumumanProvider()),
       ChangeNotifierProvider(create: (_) => PinjamanProvider()),
     ],

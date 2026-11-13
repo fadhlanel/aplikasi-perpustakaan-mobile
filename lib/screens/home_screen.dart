@@ -61,39 +61,131 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (loan.id < 0) return;
     _ratingPrompted.add(loan.id);
     var rating = 0;
+    var submitting = false;
     final komentar = TextEditingController();
     final submitted = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('Beri rating buku'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Bagaimana pengalamanmu membaca "${loan.judulBuku}"?'),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(5, (index) => IconButton(
-                  tooltip: '${index + 1} bintang',
-                  onPressed: () => setState(() => rating = index + 1),
-                  icon: Icon(index < rating ? Icons.star : Icons.star_border, color: Colors.amber, size: 30),
-                )),
+        builder: (context, setState) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 360),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Beri rating buku',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textDark,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Bagaimana pengalamanmu membaca "${loan.judulBuku}"?',
+                    style: const TextStyle(fontSize: 14, color: AppTheme.textMuted),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 20),
+                  // Star rating
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: List.generate(5, (index) => Semantics(
+                      label: '${index + 1} bintang',
+                      button: true,
+                      onTap: () => setState(() => rating = index + 1),
+                      child: IconButton(
+                        tooltip: '${index + 1} bintang',
+                        onPressed: () => setState(() => rating = index + 1),
+                        icon: Icon(
+                          index < rating ? Icons.star_rounded : Icons.star_border_rounded,
+                          color: Colors.amber,
+                          size: 36,
+                        ),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                      ),
+                    )),
+                  ),
+                  const SizedBox(height: 16),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 300),
+                    child: TextField(
+                      controller: komentar,
+                      maxLines: 3,
+                      minLines: 2,
+                      decoration: InputDecoration(
+                        labelText: 'Komentar (opsional)',
+                        hintText: 'Tulis pengalamanmu...',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: AppTheme.primaryBlue, width: 2),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: submitting ? null : () => Navigator.pop(dialogContext, false),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: const Text('Nanti', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: submitting || rating == 0 ? null : () async {
+                            setState(() => submitting = true);
+                            final ok = await provider.submitRating(
+                              peminjamanId: loan.id,
+                              rating: rating,
+                              komentar: komentar.text,
+                            );
+                            if (dialogContext.mounted) {
+                              Navigator.pop(dialogContext, ok);
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            backgroundColor: AppTheme.primaryBlue,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                          ),
+                          child: submitting
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                )
+                              : const Text('Kirim rating', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              TextField(controller: komentar, maxLines: 2, decoration: const InputDecoration(labelText: 'Komentar (opsional)')),
-            ],
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Nanti')),
-            ElevatedButton(
-              onPressed: rating == 0 ? null : () async {
-                final ok = await provider.submitRating(peminjamanId: loan.id, rating: rating, komentar: komentar.text);
-                if (dialogContext.mounted) Navigator.pop(dialogContext, ok);
-              },
-              child: const Text('Kirim rating'),
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -110,11 +202,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (_syncing || !mounted) return;
     _syncing = true;
     try {
+      final network = context.read<NetworkService>();
       await Future.wait([
         context.read<BukuProvider>().loadFirst(),
         context.read<PinjamanProvider>().fetchApiLoans(),
         context.read<PengumumanProvider>().load(),
         context.read<ConfigProvider>().load(),
+        network.checkConnection(),
       ]);
     } finally {
       _syncing = false;
@@ -192,54 +286,61 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Expanded(
+                    Flexible(
                       child: Row(
                         children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: AppTheme.softBlueBackground,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.auto_stories_rounded,
-                            color: AppTheme.primaryBlue,
-                            size: 22,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              config.namaPerpustakaan.toUpperCase(),
-                              style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.8,
-                                color: AppTheme.textMuted,
-                              ),
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: AppTheme.softBlueBackground,
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            const Text(
-                              'Beranda',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.textDark,
-                              ),
+                            child: const Icon(
+                              Icons.auto_stories_rounded,
+                              color: AppTheme.primaryBlue,
+                              size: 22,
                             ),
-                          ],
-                        ),
-                      ],
+                          ),
+                          const SizedBox(width: 10),
+                          Flexible(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  config.namaPerpustakaan.toUpperCase(),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.8,
+                                    color: AppTheme.textMuted,
+                                  ),
+                                ),
+                                const Text(
+                                  'Beranda',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.textDark,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    ),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
+                    const SizedBox(width: 8),
+                    Wrap(
+                      spacing: 4,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         // Status Keterhubungan REST API
                         const ApiStatusBadge(),
-                        const SizedBox(width: 4),
                         IconButton(
                           onPressed: () {
                             final sync = network.lastSyncTime;
@@ -286,33 +387,41 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       const Icon(Icons.sync_rounded,
                           size: 12, color: AppTheme.textMuted),
                       const SizedBox(width: 4),
-                      Text(
-                        'Sinkron ke database: ${_relativeTime(network.lastSyncTime!)}',
-                        style: const TextStyle(
-                            fontSize: 10.5, color: AppTheme.textMuted),
-                      ),
-                      const Spacer(),
-                      // Status Layanan Perpustakaan dari Web Admin
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: config.statusLayanan == 'aktif'
-                              ? const Color(0xFFD1FAE5)
-                              : config.statusLayanan == 'pemeliharaan'
-                                  ? const Color(0xFFFEF3C7)
-                                  : const Color(0xFFFEE2E2),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
+                      Flexible(
                         child: Text(
-                          config.statusLabel,
-                          style: TextStyle(
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.bold,
+                          'Sinkron ke database: ${_relativeTime(network.lastSyncTime!)}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              fontSize: 10.5, color: AppTheme.textMuted),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // Status Layanan Perpustakaan dari Web Admin
+                      Flexible(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
                             color: config.statusLayanan == 'aktif'
-                                ? const Color(0xFF065F46)
+                                ? const Color(0xFFD1FAE5)
                                 : config.statusLayanan == 'pemeliharaan'
-                                    ? const Color(0xFF92400E)
-                                    : const Color(0xFF991B1B),
+                                    ? const Color(0xFFFEF3C7)
+                                    : const Color(0xFFFEE2E2),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            config.statusLabel,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.bold,
+                              color: config.statusLayanan == 'aktif'
+                                  ? const Color(0xFF065F46)
+                                  : config.statusLayanan == 'pemeliharaan'
+                                      ? const Color(0xFF92400E)
+                                      : const Color(0xFF991B1B),
+                            ),
                           ),
                         ),
                       ),
@@ -714,28 +823,36 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           spacing: 8,
                           runSpacing: 4,
                           children: [
-                            Text(
-                              'Dipinjam: ${activeLoan.tanggalPinjam}',
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.65),
-                                fontSize: 11,
+                            Flexible(
+                              child: Text(
+                                'Dipinjam: ${activeLoan.tanggalPinjam}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.65),
+                                  fontSize: 11,
+                                ),
                               ),
                             ),
                             InkWell(
                               onTap: () => widget.onNavigateTab?.call(2),
-                              child: const Row(
+                              child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text(
-                                    'Perpanjang Pinjaman',
-                                    style: TextStyle(
-                                      color: AppTheme.cyanAccent,
-                                      fontSize: 11.5,
-                                      fontWeight: FontWeight.bold,
+                                  Flexible(
+                                    child: Text(
+                                      'Perpanjang Pinjaman',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: AppTheme.cyanAccent,
+                                        fontSize: 11.5,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
-                                  SizedBox(width: 4),
-                                  Icon(Icons.arrow_forward_rounded, size: 14, color: AppTheme.cyanAccent),
+                                  const SizedBox(width: 4),
+                                  const Icon(Icons.arrow_forward_rounded, size: 14, color: AppTheme.cyanAccent),
                                 ],
                               ),
                             ),
