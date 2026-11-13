@@ -52,7 +52,10 @@ class Peminjaman {
           ? 'Informatika / ${kategori['nama']}'
           : (json['kategori_nama']?.toString() ?? 'Informatika / 005.1'),
       lokasiRak: json['lokasi_rak']?.toString() ?? 'Rak 3B - Kampus Utama',
-      sampul: buku?['sampul']?.toString() ?? json['sampul']?.toString(),
+      sampul: buku?['sampul_url']?.toString() ??
+          buku?['sampul']?.toString() ??
+          json['sampul_url']?.toString() ??
+          json['sampul']?.toString(),
       tanggalPinjam: json['tanggal_pinjam']?.toString() ?? '19 Okt 2024',
       tanggalAmbil: json['tanggal_ambil']?.toString(),
       tanggalJatuhTempo: json['tanggal_jatuh_tempo']?.toString() ?? '26 Okt 2024',

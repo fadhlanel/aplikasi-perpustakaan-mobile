@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -29,6 +31,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final TextEditingController _searchController = TextEditingController();
+  Timer? _syncTimer;
+  bool _syncing = false;
 
   @override
   void initState() {
@@ -40,24 +44,47 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         context.read<ConfigProvider>().load();
         context.read<BukuProvider>().loadFirst();
         context.read<PinjamanProvider>().fetchApiLoans();
+        _startSyncTimer();
       }
     });
+  }
+
+  void _startSyncTimer() {
+    _syncTimer?.cancel();
+    _syncTimer = Timer.periodic(const Duration(seconds: 30), (_) => _syncData());
+  }
+
+  Future<void> _syncData() async {
+    if (_syncing || !mounted) return;
+    _syncing = true;
+    try {
+      await Future.wait([
+        context.read<BukuProvider>().loadFirst(),
+        context.read<PinjamanProvider>().fetchApiLoans(),
+        context.read<PengumumanProvider>().load(),
+        context.read<ConfigProvider>().load(),
+      ]);
+    } finally {
+      _syncing = false;
+    }
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed && mounted) {
-      context.read<BukuProvider>().loadFirst();
-      context.read<PinjamanProvider>().fetchApiLoans();
-      context.read<PengumumanProvider>().load();
-      context.read<ConfigProvider>().load();
+      _syncData();
+      _startSyncTimer();
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      _syncTimer?.cancel();
     }
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _syncTimer?.cancel();
     _searchController.dispose();
     super.dispose();
   }
