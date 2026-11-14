@@ -607,6 +607,7 @@ class _PinjamanScreenState extends State<PinjamanScreen> {
                 if (!dialogContext.mounted) return;
                 Navigator.pop(dialogContext);
                 messenger.showSnackBar(SnackBar(content: Text(ok ? 'Rating tersimpan.' : 'Rating gagal disimpan.')));
+                if (ok) provider.fetchApiLoans();
               },
               child: const Text('Simpan'),
             ),

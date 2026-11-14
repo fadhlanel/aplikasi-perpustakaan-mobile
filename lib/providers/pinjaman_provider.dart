@@ -230,13 +230,10 @@ class PinjamanProvider extends ChangeNotifier {
       if (raw is Map<String, dynamic>) {
         final updated = Peminjaman.fromJson(raw);
         historyLoans = historyLoans.map((item) => item.id == peminjamanId ? updated : item).toList();
-        // Defer notify to avoid race with dialog dispose
-        Future.microtask(() => notifyListeners());
       }
       return true;
     } catch (e) {
       error = e is ApiException ? e.message : 'Rating gagal disimpan.';
-      Future.microtask(() => notifyListeners());
       return false;
     }
   }

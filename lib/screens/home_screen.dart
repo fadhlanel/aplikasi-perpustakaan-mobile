@@ -174,6 +174,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             if (dialogContext.mounted) {
                               Navigator.pop(dialogContext, ok);
                             }
+                            if (ok) provider.fetchApiLoans();
                           },
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
