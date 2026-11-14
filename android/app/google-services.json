@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "263518159187",
+    "firebase_url": "https://apk-remote-1b1b2-default-rtdb.firebaseio.com",
+    "project_id": "apk-remote-1b1b2",
+    "storage_bucket": "apk-remote-1b1b2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:263518159187:android:0f0f42e234ea8a4e4ca1a6",
+        "android_client_info": {
+          "package_name": "com.parentalcontrol.child"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD34yoBCIEjnjdTCBAU3sYcHJXpDmdnuhk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:263518159187:android:aaf1b46a481a9bbc4ca1a6",
+        "android_client_info": {
+          "package_name": "com.parentalcontrol.parent"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD34yoBCIEjnjdTCBAU3sYcHJXpDmdnuhk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:263518159187:android:0ac8e17a7e286fcd4ca1a6",
+        "android_client_info": {
+          "package_name": "com.pustakadigital.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD34yoBCIEjnjdTCBAU3sYcHJXpDmdnuhk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
