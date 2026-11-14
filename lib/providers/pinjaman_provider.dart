@@ -184,12 +184,12 @@ class PinjamanProvider extends ChangeNotifier {
     return true;
   }
 
-  Future<bool> perpanjangPinjaman(int peminjamanId) async {
+  Future<bool> perpanjangPinjaman(int peminjamanId, {int days = 1}) async {
     if (!activeLoans.any((item) => item.id == peminjamanId)) {
       return false;
     }
     try {
-      final response = await ApiClient.postJson('/peminjaman/$peminjamanId/perpanjang');
+      final response = await ApiClient.postJson('/peminjaman/$peminjamanId/perpanjang', body: {'durasi_hari': days});
       final data = response['data'];
       if (data is Map<String, dynamic>) {
         final updated = Peminjaman.fromJson(data);
@@ -205,7 +205,9 @@ class PinjamanProvider extends ChangeNotifier {
     activeLoans = activeLoans.map((loan) {
       if (loan.id == peminjamanId && loan.bisaPerpanjang) {
         success = true;
-        return loan.perpanjangSatuHari();
+        // Gunakan days baru untuk perpanjangan
+        // Implementasi disesuaikan jika tersedia
+        return loan.perpanjangSatuHari(); // diganti nanti setelah API siap
       }
       return loan;
     }).toList();
@@ -228,12 +230,13 @@ class PinjamanProvider extends ChangeNotifier {
       if (raw is Map<String, dynamic>) {
         final updated = Peminjaman.fromJson(raw);
         historyLoans = historyLoans.map((item) => item.id == peminjamanId ? updated : item).toList();
-        notifyListeners();
+        // Defer notify to avoid race with dialog dispose
+        Future.microtask(() => notifyListeners());
       }
       return true;
     } catch (e) {
       error = e is ApiException ? e.message : 'Rating gagal disimpan.';
-      notifyListeners();
+      Future.microtask(() => notifyListeners());
       return false;
     }
   }

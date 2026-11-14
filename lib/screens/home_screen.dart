@@ -84,10 +84,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             constraints: const BoxConstraints(maxWidth: 360),
             child: Padding(
               padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
                   Text(
                     'Beri rating buku',
                     style: const TextStyle(

@@ -580,31 +580,33 @@ class _PinjamanScreenState extends State<PinjamanScreen> {
   void _showRatingDialog(Peminjaman loan) {
     var rating = loan.rating?.round() ?? 0;
     final komentar = TextEditingController();
+    final messenger = ScaffoldMessenger.of(context);
     final provider = context.read<PinjamanProvider>();
     showDialog<void>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
           title: Text(loan.rating == null ? 'Beri rating buku' : 'Ubah rating buku'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Wrap(alignment: WrapAlignment.center, spacing: 8, children: List.generate(5, (index) => IconButton(
-                onPressed: () => setState(() => rating = index + 1),
-                icon: Icon(index < rating ? Icons.star : Icons.star_border, color: Colors.amber),
-              ))),
-              TextField(controller: komentar, maxLines: 2, decoration: const InputDecoration(labelText: 'Komentar (opsional)')),
-            ],
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Wrap(alignment: WrapAlignment.center, spacing: 8, children: List.generate(5, (index) => IconButton(
+                  onPressed: () => setState(() => rating = index + 1),
+                  icon: Icon(index < rating ? Icons.star : Icons.star_border, color: Colors.amber),
+                ))),
+                TextField(controller: komentar, maxLines: 2, decoration: const InputDecoration(labelText: 'Komentar (opsional)')),
+              ],
+            ),
           ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Batal')),
             ElevatedButton(
               onPressed: rating == 0 ? null : () async {
                 final ok = await provider.submitRating(peminjamanId: loan.id, rating: rating, komentar: komentar.text);
-                if (dialogContext.mounted) {
-                  Navigator.pop(dialogContext);
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ok ? 'Rating tersimpan.' : 'Rating gagal disimpan.')));
-                }
+                if (!dialogContext.mounted) return;
+                Navigator.pop(dialogContext);
+                messenger.showSnackBar(SnackBar(content: Text(ok ? 'Rating tersimpan.' : 'Rating gagal disimpan.')));
               },
               child: const Text('Simpan'),
             ),

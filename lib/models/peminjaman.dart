@@ -64,7 +64,7 @@ class Peminjaman {
       status: status,
       sisaHari: (json['sisa_hari'] as num?)?.toInt() ?? (status == 'dikembalikan' ? 0 : 4),
       hariBerjalan: (json['hari_berjalan'] as num?)?.toInt() ?? 3,
-      durasiHariTotal: (json['durasi_hari_total'] as num?)?.toInt() ?? 7,
+      durasiHariTotal: (json['durasi_hari_total'] as num?)?.toInt() ?? (json['durasi_pinjam'] as num?)?.toInt() ?? 7,
       bisaPerpanjang: json['bisa_perpanjang'] != false && status != 'dikembalikan',
       rating: (json['ulasan'] is Map ? ((json['ulasan'] as Map)['rating'] as num?)?.toDouble() : null),
     );
