@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/api_client.dart';
 import '../core/app_constants.dart';
 import '../models/user_profile.dart';
+import '../services/notification_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   AuthProvider() {
@@ -162,6 +163,7 @@ class AuthProvider extends ChangeNotifier {
       );
       _isLoggedIn = true;
       ApiClient.authToken = token;
+      await _registerDeviceToken();
       if (rememberMe) {
         await _saveSession();
       } else {
@@ -203,6 +205,20 @@ class AuthProvider extends ChangeNotifier {
     final token = ApiClient.authToken;
     if (token != null) {
       await prefs.setString(_keyToken, token);
+    }
+  }
+
+  Future<void> _registerDeviceToken() async {
+    try {
+      final fcmToken = await NotificationService.getToken();
+      if (fcmToken == null) return;
+
+      await ApiClient.postJson(
+        '/device-token',
+        body: {'token': fcmToken, 'platform': 'android'},
+      );
+    } catch (e) {
+      print('Error registering device token: $e');
     }
   }
 
