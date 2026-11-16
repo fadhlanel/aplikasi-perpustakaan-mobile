@@ -3,12 +3,9 @@ import 'package:flutter/foundation.dart';
 import '../core/api_client.dart';
 import '../core/offline_cache.dart';
 import '../models/pengumuman.dart';
-import '../services/notification_service.dart';
 
 class PengumumanProvider extends ChangeNotifier {
-  PengumumanProvider() {
-    _listenToNotifications();
-  }
+  PengumumanProvider();
 
   List<Pengumuman> items = const <Pengumuman>[];
   bool loading = false;
@@ -53,14 +50,6 @@ class PengumumanProvider extends ChangeNotifier {
       throw ApiException('Detail pengumuman tidak tersedia.');
     }
     return Pengumuman.fromJson(data);
-  }
-
-  void _listenToNotifications() {
-    NotificationService.notificationStream.listen((data) {
-      if (data['type'] == 'pengumuman') {
-        load();
-      }
-    });
   }
 
   Future<List<Pengumuman>> _readCache() async {
