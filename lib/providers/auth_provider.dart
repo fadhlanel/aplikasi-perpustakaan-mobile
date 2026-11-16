@@ -131,6 +131,15 @@ class AuthProvider extends ChangeNotifier {
         body: {'nis': nis.trim(), 'pin': pin.trim()},
       );
       final raw = response['data'] is Map ? response['data'] : response;
+      
+      // Cek apakah PIN perlu direset
+      if (raw['pin_reset'] == true) {
+        _errorMessage = 'PIN_RESET_REQUIRED';
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+      
       final token = _text(raw['token']);
       final member = raw['siswa'] is Map
           ? raw['siswa']

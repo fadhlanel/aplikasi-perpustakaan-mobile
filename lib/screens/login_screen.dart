@@ -51,10 +51,126 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     } else {
       final message = auth.errorMessage ?? 'Login gagal. Silakan coba lagi.';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message), backgroundColor: AppTheme.dangerRed),
-      );
+      
+      // Jika PIN perlu direset, tampilkan dialog input PIN baru
+      if (message == 'PIN_RESET_REQUIRED') {
+        if (!mounted) return;
+        _showSetNewPinDialog(auth);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message), backgroundColor: AppTheme.dangerRed),
+        );
+      }
     }
+  }
+
+  void _showSetNewPinDialog(AuthProvider auth) {
+    final newPinController = TextEditingController();
+    final confirmPinController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    bool obscureNew = true;
+    bool obscureConfirm = true;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (dialogCtx, setDialogState) {
+            return AlertDialog(
+              title: const Text('PIN Direset Admin'),
+              content: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Admin telah mereset PIN Anda. Silakan buat PIN baru (6 digit angka).',
+                      style: TextStyle(fontSize: 13),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: newPinController,
+                      obscureText: obscureNew,
+                      keyboardType: TextInputType.number,
+                      maxLength: 6,
+                      decoration: InputDecoration(
+                        labelText: 'PIN Baru',
+                        counterText: '',
+                        suffixIcon: IconButton(
+                          icon: Icon(obscureNew ? Icons.visibility_off : Icons.visibility),
+                          onPressed: () => setDialogState(() => obscureNew = !obscureNew),
+                        ),
+                      ),
+                      validator: (v) {
+                        if (v == null || v.trim().length != 6) {
+                          return 'PIN baru harus 6 digit angka';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: confirmPinController,
+                      obscureText: obscureConfirm,
+                      keyboardType: TextInputType.number,
+                      maxLength: 6,
+                      decoration: InputDecoration(
+                        labelText: 'Konfirmasi PIN Baru',
+                        counterText: '',
+                        suffixIcon: IconButton(
+                          icon: Icon(obscureConfirm ? Icons.visibility_off : Icons.visibility),
+                          onPressed: () => setDialogState(() => obscureConfirm = !obscureConfirm),
+                        ),
+                      ),
+                      validator: (v) {
+                        if (v != newPinController.text) {
+                          return 'Konfirmasi PIN tidak sesuai';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('Batal'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (!formKey.currentState!.validate()) return;
+                    
+                    final success = await auth.changePin(
+                      oldPin: '',
+                      newPin: newPinController.text,
+                    );
+                    
+                    if (!mounted) return;
+                    Navigator.of(ctx).pop();
+                    
+                    if (success) {
+                      // Login ulang dengan PIN baru
+                      _pinController.text = newPinController.text;
+                      _handleLogin();
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(auth.errorMessage ?? 'Gagal menyimpan PIN baru'),
+                          backgroundColor: AppTheme.dangerRed,
+                        ),
+                      );
+                    }
+                  },
+                  child: const Text('Simpan'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
