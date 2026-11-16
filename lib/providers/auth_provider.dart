@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/api_client.dart';
 import '../core/app_constants.dart';
+import '../core/offline_cache.dart';
 import '../models/user_profile.dart';
 
 class AuthProvider extends ChangeNotifier {
@@ -282,6 +283,7 @@ class AuthProvider extends ChangeNotifier {
     ]) {
       await prefs.remove(key);
     }
+    await OfflineCache.clearCache();
     notifyListeners();
   }
 
