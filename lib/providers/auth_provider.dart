@@ -268,6 +268,9 @@ class AuthProvider extends ChangeNotifier {
       final token = _text(raw['token']);
       if (token.isEmpty) return false;
       ApiClient.authToken = token;
+      _isLoggedIn = true;
+      await _saveSession();
+      notifyListeners();
       return true;
     } catch (_) {
       return false;
