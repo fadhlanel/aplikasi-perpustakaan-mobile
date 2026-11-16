@@ -54,21 +54,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   Future<void> _promptPendingRating() async {
     final provider = context.read<PinjamanProvider>();
-    final loan = provider.historyLoans.firstWhere(
-      (item) => item.rating == null && !_ratingPrompted.contains(item.id),
-      orElse: () => Peminjaman(
-  id: 0,
-  trxId: 'DUMMY-000',
-  namaPeminjam: 'Sentinel',
-  nis: '0000.00.000',
-  bukuId: 0,
-  judulBuku: '',
-  tanggalPinjam: '-',
-  tanggalJatuhTempo: '-',
-  status: 'dipinjam',
-),
+    final pendingLoans = provider.historyLoans.where(
+      (item) => item.sudahDikembalikan &&
+          item.rating == null &&
+          !_ratingPrompted.contains(item.id),
     );
-    if (loan.id < 0) return;
+    if (pendingLoans.isEmpty) return;
+    final loan = pendingLoans.first;
     _ratingPrompted.add(loan.id);
     var rating = 0;
     var submitting = false;
