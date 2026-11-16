@@ -50,13 +50,12 @@ class _LoginScreenState extends State<LoginScreen> {
         MaterialPageRoute(builder: (_) => const MainNavigation()),
       );
     } else {
-      final message = auth.errorMessage ?? 'Login gagal. Silakan coba lagi.';
-      
       // Jika PIN perlu direset, tampilkan dialog input PIN baru
-      if (message == 'PIN_RESET_REQUIRED') {
+      if (auth.pinResetRequired) {
         if (!mounted) return;
         _showSetNewPinDialog(auth);
       } else {
+        final message = auth.errorMessage ?? 'Login gagal. Silakan coba lagi.';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message), backgroundColor: AppTheme.dangerRed),
         );

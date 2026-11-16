@@ -20,6 +20,7 @@ class AuthProvider extends ChangeNotifier {
 
   bool _isLoggedIn = false;
   bool _isLoading = true;
+  bool _pinResetRequired = false;
   String? _errorMessage;
   UserProfile _profile = const UserProfile(
     nama: 'Tamu Perpustakaan',
@@ -35,6 +36,7 @@ class AuthProvider extends ChangeNotifier {
 
   bool get isLoggedIn => _isLoggedIn;
   bool get isLoading => _isLoading;
+  bool get pinResetRequired => _pinResetRequired;
   String? get errorMessage => _errorMessage;
   UserProfile get profile => _profile;
 
@@ -124,6 +126,7 @@ class AuthProvider extends ChangeNotifier {
   }) async {
     _isLoading = true;
     _errorMessage = null;
+    _pinResetRequired = false;
     notifyListeners();
     try {
       final response = await ApiClient.postJson(
@@ -134,7 +137,7 @@ class AuthProvider extends ChangeNotifier {
       
       // Cek apakah PIN perlu direset
       if (raw['pin_reset'] == true) {
-        _errorMessage = 'PIN_RESET_REQUIRED';
+        _pinResetRequired = true;
         _isLoading = false;
         notifyListeners();
         return false;
