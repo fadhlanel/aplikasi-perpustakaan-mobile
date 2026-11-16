@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../core/app_theme.dart';
-import '../core/api_client.dart';
 import '../providers/auth_provider.dart';
 import 'main_navigation.dart';
 
@@ -65,8 +64,6 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _showSetNewPinDialog(AuthProvider auth) {
-    print('[DEBUG-dialog] ApiClient.authToken = ${ApiClient.authToken}');
-    print('[DEBUG-dialog] auth.isLoggedIn = ${auth.isLoggedIn}');
     final newPinController = TextEditingController();
     final confirmPinController = TextEditingController();
     final formKey = GlobalKey<FormState>();
@@ -144,7 +141,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   onPressed: () async {
                     if (!formKey.currentState!.validate()) return;
                     
-                    final success = await auth.changePin('', newPinController.text);
+                    final success = await auth.resetPin(
+                      _nisController.text,
+                      newPinController.text,
+                    );
                     
                     if (!mounted) return;
                     Navigator.of(ctx).pop();

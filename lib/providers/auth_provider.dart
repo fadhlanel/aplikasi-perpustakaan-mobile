@@ -258,17 +258,30 @@ class AuthProvider extends ChangeNotifier {
     return false;
   }
 
+  Future<bool> resetPin(String nis, String newPin) async {
+    try {
+      final response = await ApiClient.postJson(
+        '/login/reset-pin',
+        body: {'nis': nis.trim(), 'pin_baru': newPin},
+      );
+      final raw = response['data'] is Map ? response['data'] : response;
+      final token = _text(raw['token']);
+      if (token.isEmpty) return false;
+      ApiClient.authToken = token;
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<bool> changePin(String oldPin, String newPin) async {
     try {
-      print('[DEBUG-changePin] oldPin=$oldPin, newPin=$newPin');
       await ApiClient.putJson(
         '/profile/pin',
         body: {'pin_lama': oldPin, 'pin_baru': newPin},
       );
-      print('[DEBUG-changePin] Success');
       return true;
-    } catch (e) {
-      print('[DEBUG-changePin] Error: $e');
+    } catch (_) {
       return false;
     }
   }
