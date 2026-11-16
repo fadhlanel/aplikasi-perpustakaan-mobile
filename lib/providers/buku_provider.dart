@@ -10,6 +10,7 @@ class BukuProvider extends ChangeNotifier {
 
   List<Buku> items = <Buku>[];
   List<Kategori> kategoris = <Kategori>[];
+  Map<int, List<Map<String, dynamic>>> ulasanCache = {}; // bukuId -> list of reviews
 
   String query = '';
   int? kategoriId;
@@ -57,8 +58,6 @@ class BukuProvider extends ChangeNotifier {
         stokTersedia: 3,
         rating: 4.9,
         ulasanCount: 94,
-        kodePanggil: '005.1 MAR C',
-        lokasiRak: 'Rak RPL-04 (Lantai 2 - Sayap Barat)',
         penulis: {'nama': 'Robert C. Martin'},
         kategori: {'nama': 'RPL & IT'},
       ),
@@ -72,8 +71,6 @@ class BukuProvider extends ChangeNotifier {
         stokTersedia: 0,
         rating: 4.8,
         ulasanCount: 210,
-        kodePanggil: '158.1 CLE A',
-        lokasiRak: 'Rak PSI-02 (Lantai 1)',
         penulis: {'nama': 'James Clear'},
         kategori: {'nama': 'Pengembangan Diri'},
       ),
@@ -86,8 +83,6 @@ class BukuProvider extends ChangeNotifier {
         stokTersedia: 4,
         rating: 4.9,
         ulasanCount: 68,
-        kodePanggil: '005.2 DAR C',
-        lokasiRak: 'Rak RPL-04 (Lantai 2 - Sayap Barat)',
         penulis: {'nama': 'Robert C. Martin'},
         kategori: {'nama': 'RPL & IT'},
       ),
@@ -104,8 +99,6 @@ class BukuProvider extends ChangeNotifier {
         stokTersedia: 6,
         rating: 4.7,
         ulasanCount: 45,
-        kodePanggil: '006.3 IND M',
-        lokasiRak: 'Rak-04',
         penulis: {'nama': 'Dr. Indrajit & Tim'},
         kategori: {'nama': 'RPL & IT'},
       ),
@@ -119,8 +112,6 @@ class BukuProvider extends ChangeNotifier {
         stokTersedia: 5,
         rating: 4.8,
         ulasanCount: 38,
-        kodePanggil: '530.1 YOH F',
-        lokasiRak: 'Rak-04',
         penulis: {'nama': 'Prof. Yohanes S.'},
         kategori: {'nama': 'Sains & Fisika'},
       ),
@@ -134,8 +125,6 @@ class BukuProvider extends ChangeNotifier {
         stokTersedia: 8,
         rating: 4.9,
         ulasanCount: 82,
-        kodePanggil: '741.6 PRA U',
-        lokasiRak: 'Rak-04',
         penulis: {'nama': 'Doni Prasetyo'},
         kategori: {'nama': 'RPL & IT'},
       ),
@@ -149,8 +138,6 @@ class BukuProvider extends ChangeNotifier {
         stokTersedia: 4,
         rating: 4.6,
         ulasanCount: 29,
-        kodePanggil: '959.8 FIB R',
-        lokasiRak: 'Rak-04',
         penulis: {'nama': 'Hendro Wibowo'},
         kategori: {'nama': 'Sejarah & Sosial'},
       ),
@@ -178,8 +165,6 @@ class BukuProvider extends ChangeNotifier {
       stokTersedia: 8,
       rating: 4.8,
       ulasanCount: 128,
-      kodePanggil: 'code 121-323-232',
-      lokasiRak: 'Rak RPL-04 (Lantai 2 - Sayap Barat)',
       penulis: {'nama': 'Dr. Irfan Mahendra, M.Kom.'},
       kategori: {'nama': 'RPL / Software'},
       penerbit: {'nama': 'Informatika Bandung'},
@@ -364,6 +349,34 @@ class BukuProvider extends ChangeNotifier {
     } catch (_) {
       // Fallback: gunakan rating yang sudah ada
     }
+  }
+
+  Future<List<Map<String, dynamic>>> fetchUlasan(int bukuId) async {
+    // Return cached if available
+    if (ulasanCache.containsKey(bukuId)) {
+      return ulasanCache[bukuId] ?? [];
+    }
+
+    try {
+      final res = await ApiClient.getJson('/buku/$bukuId/ulasan');
+      final data = res['data'];
+      if (data is List) {
+        final reviews = data.whereType<Map<String, dynamic>>().toList();
+        ulasanCache[bukuId] = reviews;
+        
+        // Update ulasanCount in items
+        final idx = items.indexWhere((b) => b.id == bukuId);
+        if (idx >= 0) {
+          items[idx] = items[idx].copyWith(ulasanCount: reviews.length);
+          notifyListeners();
+        }
+        
+        return reviews;
+      }
+    } catch (_) {
+      // Return empty list on error
+    }
+    return [];
   }
 
   void _setLoading(bool value, {String? error}) {

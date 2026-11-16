@@ -448,14 +448,6 @@ class _ProfilScreenState extends State<ProfilScreen> {
                                                   fontWeight: FontWeight.bold,
                                                 ),
                                               ),
-                                              const SizedBox(width: 10),
-                                              Text(
-                                                buku.lokasiRak,
-                                                style: const TextStyle(
-                                                  fontSize: 10,
-                                                  color: AppTheme.textSubtle,
-                                                ),
-                                              ),
                                             ],
                                           ),
                                         ],

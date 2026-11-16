@@ -445,25 +445,6 @@ class _PinjamanScreenState extends State<PinjamanScreen> {
                         color: AppTheme.textMuted,
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        const Icon(Icons.verified_rounded, size: 14, color: AppTheme.mintGreen),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            loan.lokasiRak,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF047857),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
                   ],
                 ),
               ),

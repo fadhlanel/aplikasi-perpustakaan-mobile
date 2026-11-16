@@ -9,7 +9,6 @@ class Peminjaman {
     required this.judulBuku,
     this.pengarang = 'Oleh: Budi Raharjo, S.Kom.',
     this.kategoriNama = 'Informatika / 005.1',
-    this.lokasiRak = 'Rak 3B - Kampus Utama',
     this.sampul,
     required this.tanggalPinjam,
     this.tanggalAmbil,
@@ -52,7 +51,6 @@ class Peminjaman {
       kategoriNama: kategori != null
           ? 'Informatika / ${kategori['nama']}'
           : (json['kategori_nama']?.toString() ?? 'Informatika / 005.1'),
-      lokasiRak: json['lokasi_rak']?.toString() ?? 'Rak 3B - Kampus Utama',
       sampul: buku?['sampul_url']?.toString() ??
           buku?['sampul']?.toString() ??
           json['sampul_url']?.toString() ??
@@ -82,7 +80,6 @@ class Peminjaman {
       judulBuku: 'Pemrograman Web & Mobile dengan Flutter',
       pengarang: 'Oleh: Rahmat Hidayat, M.Kom',
       kategoriNama: 'Informatika / 005.1',
-      lokasiRak: 'Rak 3B - Kampus Utama',
       tanggalPinjam: '19 Okt 2024',
       tanggalJatuhTempo: '26 Okt 2024',
       status: 'dipinjam',
@@ -101,7 +98,6 @@ class Peminjaman {
   final String judulBuku;
   final String pengarang;
   final String kategoriNama;
-  final String lokasiRak;
   final String? sampul;
   final String tanggalPinjam;
   final String? tanggalAmbil;
@@ -139,7 +135,6 @@ class Peminjaman {
       judulBuku: judulBuku,
       pengarang: pengarang,
       kategoriNama: kategoriNama,
-      lokasiRak: lokasiRak,
       sampul: sampul,
       tanggalPinjam: tanggalPinjam,
       tanggalAmbil: tanggalAmbil,

@@ -23,6 +23,36 @@ class DetailBukuScreen extends StatefulWidget {
 class _DetailBukuScreenState extends State<DetailBukuScreen> {
   int _selectedTab = 0; // 0: Sinopsis & Ringkasan, 1: Detail Metadata, 2: Ulasan
   bool _isPinjamLoading = false;
+  List<Map<String, dynamic>> _ulasan = [];
+  bool _loadingUlasan = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRatingAndUlasan();
+  }
+
+  Future<void> _loadRatingAndUlasan() async {
+    final bukuProv = context.read<BukuProvider>();
+    final buku = bukuProv.items.firstWhere(
+      (b) => b.id == widget.bukuId,
+      orElse: Buku.kosong,
+    );
+
+    if (buku.id != 0) {
+      setState(() => _loadingUlasan = true);
+      
+      // Fetch rating stats and ulasan reviews in parallel
+      await Future.wait([
+        bukuProv.enrichBukuWithRatings(buku),
+        bukuProv.fetchUlasan(buku.id).then((reviews) {
+          setState(() => _ulasan = reviews);
+        }),
+      ]);
+      
+      setState(() => _loadingUlasan = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -165,7 +195,6 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
                 _buildTagChip('RPL / Software'),
                 _buildTagChip('Indonesia'),
                 _buildTagChip('Tahun ${buku.tahunTerbit}'),
-                _buildTagChip(buku.kodePanggil),
               ],
             ),
             const SizedBox(height: 18),
@@ -242,64 +271,6 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
               ),
             ),
             const SizedBox(height: 12),
-
-            // Location Card (Blue)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(
-                color: AppTheme.softBlueBackground,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFD6E6F9)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.location_on_outlined, color: AppTheme.primaryBlue, size: 20),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'LOKASI PENEMPATAN',
-                          style: TextStyle(
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
-                            color: AppTheme.textMuted,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          buku.lokasiRak,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.textDark,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  OutlinedButton.icon(
-                    onPressed: _showMapDialog,
-                    icon: const Icon(Icons.map_outlined, size: 14, color: AppTheme.primaryNavy),
-                    label: const Text(
-                      'Peta',
-                      style: TextStyle(fontSize: 11.5, color: AppTheme.primaryNavy, fontWeight: FontWeight.bold),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      side: const BorderSide(color: Color(0xFFCBD5E1)),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      visualDensity: VisualDensity.compact,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 18),
 
             // Segmented Tabs (Sinopsis, Metadata, Ulasan)
             Container(
@@ -559,13 +530,44 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
             _buildMetaRow('Penerbit', buku.namaPenerbit),
             _buildMetaRow('Tahun Terbit', '${buku.tahunTerbit}'),
             _buildMetaRow('ISBN', buku.isbn ?? '978-602-05-1234-5'),
-            _buildMetaRow('Klasifikasi DDC', buku.kodePanggil),
             _buildMetaRow('Bahasa', 'Bahasa Indonesia'),
-            _buildMetaRow('Lokasi Fisik', buku.lokasiRak),
           ],
         ),
       );
     } else {
+      if (_loadingUlasan) {
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFEEF2F6)),
+          ),
+          child: const Center(
+            child: CircularProgressIndicator(),
+          ),
+        );
+      }
+
+      if (_ulasan.isEmpty) {
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFEEF2F6)),
+          ),
+          child: const Center(
+            child: Text(
+              'Belum ada ulasan untuk buku ini',
+              style: TextStyle(color: AppTheme.textMuted),
+            ),
+          ),
+        );
+      }
+
       return Container(
         width: double.infinity,
         padding: const EdgeInsets.all(16),
@@ -576,9 +578,10 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
         ),
         child: Column(
           children: [
-            _buildReviewItem('Ahmad Fauzi (XII RPL 2)', 5, 'Buku sangat mudah dipahami, contoh kodenya relevan untuk tugas akhir.'),
-            const Divider(),
-            _buildReviewItem('Siti Nurhaliza (XI RPL 1)', 5, 'Penjelasan State Management Provider & BLoC paling lengkap!'),
+            for (int i = 0; i < _ulasan.length; i++) ...[
+              _buildReviewItemFromData(_ulasan[i]),
+              if (i < _ulasan.length - 1) const Divider(),
+            ],
           ],
         ),
       );
@@ -688,6 +691,14 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
     );
   }
 
+  Widget _buildReviewItemFromData(Map<String, dynamic> data) {
+    final nama = data['nama'] ?? data['nama_pengguna'] ?? data['user_name'] ?? 'Pengguna';
+    final rating = (data['rating'] as num?)?.toInt() ?? 0;
+    final komentar = data['komentar'] ?? data['comment'] ?? '';
+    
+    return _buildReviewItem(nama, rating, komentar);
+  }
+
   Future<void> _handlePinjam(
     BuildContext context,
     Buku buku,
@@ -752,8 +763,7 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
         ),
         content: Text(
           'Buku "${buku.judul}" berhasil direservasi atas nama ${auth.profile.nama}. '
-          'Tanggal ambil: ${selectedDate.day.toString().padLeft(2, '0')}/${selectedDate.month.toString().padLeft(2, '0')}/${selectedDate.year}. '
-          'Lokasi: ${buku.lokasiRak}.'
+          'Tanggal ambil: ${selectedDate.day.toString().padLeft(2, '0')}/${selectedDate.month.toString().padLeft(2, '0')}/${selectedDate.year}.'
           ,
           style: const TextStyle(fontSize: 13, height: 1.4),
         ),
@@ -764,47 +774,6 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
             },
             child: const Text('OK'),
           ),
-        ],
-      ),
-    );
-  }
-
-  void _showMapDialog() {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        insetPadding: const EdgeInsets.symmetric(horizontal: 24),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Denah Rak Perpustakaan'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              height: 160,
-              decoration: BoxDecoration(
-                color: AppTheme.softBlueBackground,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.blue.shade100),
-              ),
-              child: const Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.map_rounded, size: 48, color: AppTheme.primaryBlue),
-                    SizedBox(height: 8),
-                    Text(
-                      'Lantai 2 — Sayap Barat\nZona Rekayasa Perangkat Lunak',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Tutup')),
         ],
       ),
     );

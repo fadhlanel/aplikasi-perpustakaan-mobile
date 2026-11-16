@@ -1157,13 +1157,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             ),
             const SizedBox(height: 8),
 
-            // Call number
-            Text(
-              buku.kodePanggil,
-              style: const TextStyle(fontSize: 10, color: AppTheme.textSubtle, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 2),
-
             // Title
             Text(
               buku.judul,

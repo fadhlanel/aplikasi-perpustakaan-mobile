@@ -16,8 +16,6 @@ class Buku {
     this.penerbit,
     this.rating = 4.8,
     this.ulasanCount = 128,
-    this.kodePanggil = '005.1 INF P',
-    this.lokasiRak = 'Rak RPL-04 (Lantai 2 - Sayap Barat)',
     this.isBookmarked = false,
   });
 
@@ -44,8 +42,6 @@ class Buku {
           : null,
       rating: (json['rating_rata_rata'] as num? ?? json['rating'] as num?)?.toDouble() ?? 4.8,
       ulasanCount: (json['total_rating'] as num? ?? json['ulasan_count'] as num?)?.toInt() ?? 128,
-      kodePanggil: json['kode_panggil']?.toString() ?? '005.1 MAR C',
-      lokasiRak: json['lokasi_rak']?.toString() ?? 'Rak RPL-04 (Lantai 2 - Sayap Barat)',
       isBookmarked: json['is_bookmarked'] == true,
     );
   }
@@ -73,8 +69,6 @@ class Buku {
   final Map<String, dynamic>? penerbit;
   final double rating;
   final int ulasanCount;
-  final String kodePanggil;
-  final String lokasiRak;
   final bool isBookmarked;
 
   String get namaKategori => kategori?['nama']?.toString() ?? 'Teknologi Informasi';
@@ -108,8 +102,6 @@ class Buku {
     Map<String, dynamic>? penerbit,
     double? rating,
     int? ulasanCount,
-    String? kodePanggil,
-    String? lokasiRak,
     bool? isBookmarked,
   }) {
     return Buku(
@@ -128,8 +120,6 @@ class Buku {
       penerbit: penerbit ?? this.penerbit,
       rating: rating ?? this.rating,
       ulasanCount: ulasanCount ?? this.ulasanCount,
-      kodePanggil: kodePanggil ?? this.kodePanggil,
-      lokasiRak: lokasiRak ?? this.lokasiRak,
       isBookmarked: isBookmarked ?? this.isBookmarked,
     );
   }
@@ -150,8 +140,6 @@ class Buku {
         'penerbit': penerbit,
         'rating_rata_rata': rating,
         'total_rating': ulasanCount,
-        'kode_panggil': kodePanggil,
-        'lokasi_rak': lokasiRak,
         'is_bookmarked': isBookmarked,
       };
 }
