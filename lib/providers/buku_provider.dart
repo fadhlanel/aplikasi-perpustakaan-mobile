@@ -346,6 +346,26 @@ class BukuProvider extends ChangeNotifier {
     return Buku.kosong();
   }
 
+  Future<void> enrichBukuWithRatings(Buku buku) async {
+    try {
+      final res = await ApiClient.getJson('/buku/${buku.id}/rating-stats');
+      final data = res['data'];
+      if (data is Map<String, dynamic>) {
+        final idx = items.indexWhere((b) => b.id == buku.id);
+        if (idx >= 0) {
+          items[idx] = Buku.fromJson({
+            ...items[idx].toJson(),
+            'rating_rata_rata': data['rating_rata_rata'],
+            'total_rating': data['total_rating'],
+          });
+          notifyListeners();
+        }
+      }
+    } catch (_) {
+      // Fallback: gunakan rating yang sudah ada
+    }
+  }
+
   void _setLoading(bool value, {String? error}) {
     loading = value;
     this.error = error;

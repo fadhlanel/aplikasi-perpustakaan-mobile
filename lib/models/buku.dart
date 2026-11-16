@@ -38,8 +38,8 @@ class Buku {
       penerbit: json['penerbit'] is Map<String, dynamic>
           ? (json['penerbit'] as Map<String, dynamic>)
           : null,
-      rating: (json['rating'] as num?)?.toDouble() ?? 4.8,
-      ulasanCount: (json['ulasan_count'] as num?)?.toInt() ?? 128,
+      rating: (json['rating_rata_rata'] as num? ?? json['rating'] as num?)?.toDouble() ?? 4.8,
+      ulasanCount: (json['total_rating'] as num? ?? json['ulasan_count'] as num?)?.toInt() ?? 128,
       kodePanggil: json['kode_panggil']?.toString() ?? '005.1 MAR C',
       lokasiRak: json['lokasi_rak']?.toString() ?? 'Rak RPL-04 (Lantai 2 - Sayap Barat)',
       isBookmarked: json['is_bookmarked'] == true,
@@ -123,4 +123,23 @@ class Buku {
       isBookmarked: isBookmarked ?? this.isBookmarked,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'judul': judul,
+        'deskripsi': deskripsi,
+        'tahun_terbit': tahunTerbit,
+        'isbn': isbn,
+        'sampul_url': sampul,
+        'stok': stok,
+        'stok_tersedia': stokTersedia,
+        'kategori': kategori,
+        'penulis': penulis,
+        'penerbit': penerbit,
+        'rating_rata_rata': rating,
+        'total_rating': ulasanCount,
+        'kode_panggil': kodePanggil,
+        'lokasi_rak': lokasiRak,
+        'is_bookmarked': isBookmarked,
+      };
 }
