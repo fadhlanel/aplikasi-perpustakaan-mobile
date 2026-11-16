@@ -15,6 +15,12 @@ class PinjamanProvider extends ChangeNotifier {
   List<Peminjaman> historyLoans = <Peminjaman>[];
   List<Peminjaman> dendaLoans = <Peminjaman>[];
 
+  @override
+  void notifyListeners() {
+    if (!hasListeners) return;
+    super.notifyListeners();
+  }
+
   /*
   void _initDefaultLoans() {
     activeLoans = [
