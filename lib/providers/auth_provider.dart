@@ -260,12 +260,15 @@ class AuthProvider extends ChangeNotifier {
 
   Future<bool> changePin(String oldPin, String newPin) async {
     try {
+      print('[DEBUG-changePin] oldPin=$oldPin, newPin=$newPin');
       await ApiClient.putJson(
         '/profile/pin',
         body: {'pin_lama': oldPin, 'pin_baru': newPin},
       );
+      print('[DEBUG-changePin] Success');
       return true;
-    } catch (_) {
+    } catch (e) {
+      print('[DEBUG-changePin] Error: $e');
       return false;
     }
   }

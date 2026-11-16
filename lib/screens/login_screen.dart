@@ -64,6 +64,8 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _showSetNewPinDialog(AuthProvider auth) {
+    print('[DEBUG-dialog] ApiClient.authToken = ${ApiClient.authToken}');
+    print('[DEBUG-dialog] auth.isLoggedIn = ${auth.isLoggedIn}');
     final newPinController = TextEditingController();
     final confirmPinController = TextEditingController();
     final formKey = GlobalKey<FormState>();
