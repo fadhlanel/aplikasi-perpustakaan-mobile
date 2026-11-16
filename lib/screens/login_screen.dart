@@ -142,10 +142,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   onPressed: () async {
                     if (!formKey.currentState!.validate()) return;
                     
-                    final success = await auth.changePin(
-                      oldPin: '',
-                      newPin: newPinController.text,
-                    );
+                    final success = await auth.changePin('', newPinController.text);
                     
                     if (!mounted) return;
                     Navigator.of(ctx).pop();
