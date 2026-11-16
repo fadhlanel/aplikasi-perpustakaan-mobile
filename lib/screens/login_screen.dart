@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../core/app_theme.dart';
+import '../core/api_client.dart';
 import '../providers/auth_provider.dart';
 import 'main_navigation.dart';
 
