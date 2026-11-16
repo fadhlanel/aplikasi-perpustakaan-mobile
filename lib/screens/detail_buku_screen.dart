@@ -487,6 +487,11 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
 
   Widget _buildTabContent(Buku buku) {
     if (_selectedTab == 0) {
+      final sinopsisText = (buku.sinopsis?.trim().isNotEmpty ?? false)
+          ? buku.sinopsis!.trim()
+          : buku.deskripsiText;
+      final ringkasanText = buku.ringkasan?.trim() ?? '';
+
       return Container(
         width: double.infinity,
         padding: const EdgeInsets.all(16),
@@ -508,24 +513,33 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
             ),
             const SizedBox(height: 10),
             Text(
-              buku.deskripsiText,
+              sinopsisText,
               style: const TextStyle(
                 fontSize: 13,
                 color: Color(0xFF334155),
                 height: 1.5,
               ),
             ),
-            const SizedBox(height: 16),
-            const Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _FeaturePill(text: 'Dart SDK 3.x & Flutter 3.10+'),
-                _FeaturePill(text: 'State Management Modern'),
-                _FeaturePill(text: 'Integrasi Backend REST & GraphQL'),
-                _FeaturePill(text: 'Repository Proyek GitHub Eksklusif'),
-              ],
-            ),
+            if (ringkasanText.isNotEmpty) ...[
+              const SizedBox(height: 18),
+              const Text(
+                'Ringkasan',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textDark,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                ringkasanText,
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: Color(0xFF334155),
+                  height: 1.5,
+                ),
+              ),
+            ],
           ],
         ),
       );

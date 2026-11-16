@@ -4,6 +4,8 @@ class Buku {
     required this.id,
     required this.judul,
     this.deskripsi,
+    this.sinopsis,
+    this.ringkasan,
     required this.tahunTerbit,
     this.isbn,
     this.sampul,
@@ -24,6 +26,8 @@ class Buku {
       id: (json['id'] as num?)?.toInt() ?? 0,
       judul: json['judul']?.toString() ?? '',
       deskripsi: json['deskripsi']?.toString(),
+      sinopsis: json['sinopsis']?.toString(),
+      ringkasan: json['ringkasan']?.toString(),
       tahunTerbit: (json['tahun_terbit'] as num?)?.toInt() ?? 2023,
       isbn: json['isbn']?.toString() ?? '978-602-05-1234-5',
       sampul: json['sampul_url']?.toString() ?? json['sampul']?.toString(),
@@ -57,6 +61,8 @@ class Buku {
   final int id;
   final String judul;
   final String? deskripsi;
+  final String? sinopsis;
+  final String? ringkasan;
   final int tahunTerbit;
   final String? isbn;
   final String? sampul;
@@ -90,6 +96,8 @@ class Buku {
     int? id,
     String? judul,
     String? deskripsi,
+    String? sinopsis,
+    String? ringkasan,
     int? tahunTerbit,
     String? isbn,
     String? sampul,
@@ -108,6 +116,8 @@ class Buku {
       id: id ?? this.id,
       judul: judul ?? this.judul,
       deskripsi: deskripsi ?? this.deskripsi,
+      sinopsis: sinopsis ?? this.sinopsis,
+      ringkasan: ringkasan ?? this.ringkasan,
       tahunTerbit: tahunTerbit ?? this.tahunTerbit,
       isbn: isbn ?? this.isbn,
       sampul: sampul ?? this.sampul,
@@ -128,6 +138,8 @@ class Buku {
         'id': id,
         'judul': judul,
         'deskripsi': deskripsi,
+        'sinopsis': sinopsis,
+        'ringkasan': ringkasan,
         'tahun_terbit': tahunTerbit,
         'isbn': isbn,
         'sampul_url': sampul,
