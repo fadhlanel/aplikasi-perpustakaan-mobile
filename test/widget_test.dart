@@ -37,12 +37,12 @@ Widget createTestApp(Widget child) {
 }
 
 void main() {
-  testWidgets('Layar 1: Splash screen menampilkan judul Pustaka Digital & SMK 1 Surabaya', (tester) async {
+  testWidgets('Layar 1: Splash screen menampilkan judul Pustaka Digital & SMK 6 Jember', (tester) async {
     await tester.pumpWidget(createTestApp(const SplashScreen()));
 
     expect(find.text('Pustaka Digital'), findsOneWidget);
-    expect(find.text('Sistem Perpustakaan Pintar SMK / SMA'), findsOneWidget);
-    expect(find.text('SMK Negeri 1 Surabaya'), findsOneWidget);
+    expect(find.text('Sistem Perpustakaan Pintar SMK Negeri 6 Jember'), findsOneWidget);
+    expect(find.text('SMK Negeri 6 Jember'), findsOneWidget);
   });
 
   testWidgets('Layar 2: Login screen menampilkan form NIS, PIN, dan tombol Masuk tanpa masuk cepat', (tester) async {

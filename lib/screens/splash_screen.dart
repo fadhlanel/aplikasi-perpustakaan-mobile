@@ -154,7 +154,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
               // Subtitle
               Text(
-                'Sistem Perpustakaan Pintar SMK / SMA',
+                'Sistem Perpustakaan Pintar SMK Negeri 6 Jember',
                 style: TextStyle(
                   fontSize: 15,
                   color: Colors.white.withValues(alpha: 0.8),
@@ -265,7 +265,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'SMK Negeri 1 Surabaya',
+                        'SMK Negeri 6 Jember',
                         style: TextStyle(
                           fontSize: 13,
                           color: Colors.white.withValues(alpha: 0.65),

@@ -266,7 +266,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 Icon(Icons.menu_book_rounded, color: Colors.white, size: 14),
                                 SizedBox(width: 6),
                                 Text(
-                                  'PustakaDigital SMK Negeri 1',
+                                  'PustakaDigital SMK Negeri 6 Jember',
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 12,

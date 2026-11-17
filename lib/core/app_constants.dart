@@ -4,7 +4,7 @@ class AppConstants {
 
   static const String appName = 'Pustaka Digital';
   static const String appTagline = 'Sistem Perpustakaan Pintar SMK / SMA';
-  static const String schoolName = 'SMK Negeri 1 Surabaya';
+  static const String schoolName = 'SMK Negeri 6 Jember';
 
   // Default Student Data (Sesuai Desain Figma)
   static const String defaultStudentName = 'Muhammad Irsyadul I.';

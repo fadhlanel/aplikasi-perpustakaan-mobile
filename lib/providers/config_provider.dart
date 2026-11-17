@@ -10,7 +10,7 @@ class ConfigProvider extends ChangeNotifier {
 
   String statusLayanan = 'aktif';
   String namaPerpustakaan = 'PustakaDigital';
-  String namaSekolah = 'SMK / SMA';
+  String namaSekolah = 'SMK Negeri 6 Jember';
   String whatsappNomor = '081234567890';
   String whatsappTemplate = 'Halo Pustakawan, saya {nama} (NIS: {nis}) ingin bertanya perihal layanan perpustakaan.';
   int durasiPeminjaman = 3;

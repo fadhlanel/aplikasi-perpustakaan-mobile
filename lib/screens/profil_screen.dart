@@ -1258,7 +1258,7 @@ class _ProfilScreenState extends State<ProfilScreen> {
                 const SizedBox(height: 12),
                 Center(
                   child: Text(
-                    'Pustaka Digital v1.0.0 (Build 1) • SMK Negeri 1 Surabaya',
+                    'Pustaka Digital v1.0.0 (Build 1) • SMK Negeri 6 Jember',
                     style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
                   ),
                 ),
