@@ -11,6 +11,8 @@ class ConfigProvider extends ChangeNotifier {
   String statusLayanan = 'aktif';
   String namaPerpustakaan = 'PustakaDigital';
   String namaSekolah = 'SMK / SMA';
+  String whatsappNomor = '081234567890';
+  String whatsappTemplate = 'Halo Pustakawan, saya {nama} (NIS: {nis}) ingin bertanya perihal layanan perpustakaan.';
   int durasiPeminjaman = 3;
   int batasBuku = 3;
   int durasiPerpanjangan = 1;
@@ -35,6 +37,8 @@ class ConfigProvider extends ChangeNotifier {
       statusLayanan = _text(data['status_layanan'], fallback: 'aktif');
       namaPerpustakaan = _text(data['nama_perpustakaan'], fallback: namaPerpustakaan);
       namaSekolah = _text(data['nama_sekolah'], fallback: namaSekolah);
+      whatsappNomor = _text(data['whatsapp_nomor'], fallback: whatsappNomor);
+      whatsappTemplate = _text(data['whatsapp_template'], fallback: whatsappTemplate);
       durasiPeminjaman = _int(data['durasi_peminjaman'], fallback: durasiPeminjaman);
       batasBuku = _int(data['batas_buku'], fallback: batasBuku);
       durasiPerpanjangan = _int(data['durasi_perpanjangan'], fallback: durasiPerpanjangan);

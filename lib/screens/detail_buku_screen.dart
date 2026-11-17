@@ -322,7 +322,7 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
 
             // Related Books Horizontal Carousel
             SizedBox(
-              height: 190,
+              height: 215,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: bukuProv.popularBooks.length,
@@ -347,7 +347,7 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
                             penulis: related.namaPenulis,
                             sampulUrl: related.sampul,
                             width: 110,
-                            height: 130,
+                            height: 155,
                             borderRadius: 8,
                           ),
                           const SizedBox(height: 6),

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../core/app_theme.dart';
 import '../core/offline_cache.dart';
 import '../providers/auth_provider.dart';
 import '../providers/buku_provider.dart';
+import '../providers/config_provider.dart';
 import '../providers/pinjaman_provider.dart';
 import '../widgets/book_cover_widget.dart';
 import 'login_screen.dart';
@@ -28,6 +30,25 @@ class _ProfilScreenState extends State<ProfilScreen> {
         context.read<AuthProvider>().refreshProfile();
       }
     });
+  }
+
+  Future<void> _openWhatsApp(BuildContext context) async {
+    final config = context.read<ConfigProvider>();
+    final profile = context.read<AuthProvider>().profile;
+    var phone = config.whatsappNomor.replaceAll(RegExp(r'[^0-9]'), '');
+    if (phone.startsWith('0')) {
+      phone = '62${phone.substring(1)}';
+    } else if (phone.startsWith('8')) {
+      phone = '62$phone';
+    }
+    final message = config.whatsappTemplate
+        .replaceAll('{nama}', profile.nama)
+        .replaceAll('{nis}', profile.nis)
+        .replaceAll('{kelas}', profile.kelas);
+    final uri = Uri.parse('https://wa.me/$phone?text=${Uri.encodeComponent(message)}');
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication) && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('WhatsApp tidak dapat dibuka.')));
+    }
   }
 
   void _showEditProfileSheet(BuildContext context, AuthProvider auth) {
@@ -228,6 +249,7 @@ class _ProfilScreenState extends State<ProfilScreen> {
             ),
             onPressed: () async {
               Navigator.of(ctx).pop();
+              context.read<PinjamanProvider>().clear();
               await auth.logout();
               if (context.mounted) {
                 Navigator.of(context).pushAndRemoveUntil(
@@ -1516,13 +1538,7 @@ class _ProfilScreenState extends State<ProfilScreen> {
                     ),
                     onPressed: () {
                       Navigator.of(ctx).pop();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Menghubungkan ke WhatsApp Ruang Sirkulasi Perpustakaan...',
-                          ),
-                        ),
-                      );
+                      _openWhatsApp(context);
                     },
                   ),
                 ),

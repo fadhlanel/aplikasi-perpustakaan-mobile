@@ -960,7 +960,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
                 // Popular Books Horizontal List
                 SizedBox(
-                  height: 290,
+                  height: 345,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: bukuProv.filteredPopularBooks.length,
@@ -1017,7 +1017,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   physics: const NeverScrollableScrollPhysics(),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
-                    childAspectRatio: 0.64,
+                    childAspectRatio: 0.54,
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
                   ),
@@ -1103,8 +1103,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     judul: buku.judul,
                     penulis: buku.namaPenulis,
                     sampulUrl: buku.sampul,
-                    width: 155,
-                    height: 140,
+                    width: 140,
+                    height: 195,
                     borderRadius: 10,
                   ),
                 ),
@@ -1241,8 +1241,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     judul: buku.judul,
                     penulis: buku.namaPenulis,
                     sampulUrl: buku.sampul,
-                    width: 150,
-                    height: 125,
+                    width: 140,
+                    height: 195,
                     borderRadius: 10,
                   ),
                 ),

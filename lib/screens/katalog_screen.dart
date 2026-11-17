@@ -74,7 +74,9 @@ class _KatalogScreenState extends State<KatalogScreen> {
                                         gridDelegate:
                                             const SliverGridDelegateWithFixedCrossAxisCount(
                                           crossAxisCount: 2,
-                                          childAspectRatio: 0.95,
+                                          childAspectRatio: 0.62,
+                                          crossAxisSpacing: 10,
+                                          mainAxisSpacing: 10,
                                         ),
                                         itemCount: provider.items.length +
                                             (provider.hasMore ? 1 : 0),
@@ -147,8 +149,8 @@ class _KatalogScreenState extends State<KatalogScreen> {
                     judul: buku.judul,
                     penulis: buku.namaPenulis,
                     sampulUrl: buku.sampul,
-                    width: 150,
-                    height: 125,
+                    width: 140,
+                    height: 195,
                     borderRadius: 10,
                   ),
                 ),
