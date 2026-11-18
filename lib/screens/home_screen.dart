@@ -1049,7 +1049,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         ? provider.kategoriId == null
         : provider.kategoriId == kategori.id;
     return InkWell(
-      onTap: () => provider.selectCategory(kategori),
+      onTap: () => provider.pilihKategori(kategori?.id),
       borderRadius: BorderRadius.circular(20),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
