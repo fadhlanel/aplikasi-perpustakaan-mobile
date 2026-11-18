@@ -44,7 +44,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       if (mounted) {
         context.read<PengumumanProvider>().ensureLoaded();
         context.read<ConfigProvider>().load();
-        context.read<BukuProvider>().loadFirst();
+        await context.read<BukuProvider>().loadFirst();
+        context.read<BukuProvider>().loadKategoris();
         await context.read<PinjamanProvider>().fetchApiLoans();
         if (mounted) await _promptPendingRating();
         _startSyncTimer();
@@ -902,15 +903,21 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      _buildCategoryChip('Semua', Icons.grid_view_rounded, bukuProv),
-                      const SizedBox(width: 8),
-                      _buildCategoryChip('RPL & IT', Icons.code_rounded, bukuProv),
-                      const SizedBox(width: 8),
-                      _buildCategoryChip('Sains & Fisika', Icons.science_outlined, bukuProv),
-                      const SizedBox(width: 8),
-                      _buildCategoryChip('Novel & Fiksi', Icons.auto_stories_outlined, bukuProv),
-                      const SizedBox(width: 8),
-                      _buildCategoryChip('Sejarah & Sosial', Icons.history_edu_rounded, bukuProv),
+                      _buildCategoryChip(
+                        'Semua',
+                        Icons.grid_view_rounded,
+                        bukuProv,
+                        null,
+                      ),
+                      for (final kategori in bukuProv.kategoris) ...[
+                        const SizedBox(width: 8),
+                        _buildCategoryChip(
+                          kategori.nama,
+                          _iconForKategori(kategori.nama),
+                          bukuProv,
+                          kategori,
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -1036,10 +1043,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
   }
 
-  Widget _buildCategoryChip(String title, IconData icon, BukuProvider provider) {
-    final isSelected = provider.selectedCategoryName == title;
+  Widget _buildCategoryChip(String title, IconData icon, BukuProvider provider, Kategori? kategori) {
+    final isSelected = kategori == null
+        ? provider.kategoriId == null
+        : provider.kategoriId == kategori.id;
     return InkWell(
-      onTap: () => provider.selectCategory(title),
+      onTap: () => provider.selectCategory(kategori),
       borderRadius: BorderRadius.circular(20),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
@@ -1071,6 +1080,23 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         ),
       ),
     );
+  }
+
+  IconData _iconForKategori(String nama) {
+    final lower = nama.toLowerCase();
+    if (lower.contains('rpl') || lower.contains('it') || lower.contains('teknologi') || lower.contains('software')) {
+      return Icons.code_rounded;
+    }
+    if (lower.contains('sains') || lower.contains('fisika') || lower.contains('matematika')) {
+      return Icons.science_outlined;
+    }
+    if (lower.contains('novel') || lower.contains('fiksi')) {
+      return Icons.auto_stories_outlined;
+    }
+    if (lower.contains('sejarah') || lower.contains('sosial')) {
+      return Icons.history_edu_rounded;
+    }
+    return Icons.category_rounded;
   }
 
   Widget _buildPopularCard(Buku buku, BukuProvider provider) {

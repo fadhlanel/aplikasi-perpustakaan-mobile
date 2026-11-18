@@ -14,7 +14,7 @@ class BukuProvider extends ChangeNotifier {
 
   String query = '';
   int? kategoriId;
-  String selectedCategoryName = 'RPL & IT';
+  String selectedCategoryName = 'Semua';
 
   int currentPage = 1;
   int lastPage = 1;
@@ -34,14 +34,8 @@ class BukuProvider extends ChangeNotifier {
   List<Buku> get filteredLatestBooks => _filterCategory(latestBooks);
 
   List<Buku> _filterCategory(List<Buku> books) {
-    if (selectedCategoryName == 'Semua') return books;
-    return books.where((book) {
-      final nama = book.namaKategori;
-      if (nama.toLowerCase().contains(selectedCategoryName.toLowerCase())) return true;
-      // Penyamaan logika dengan Katalog (katalog_screen.dart).
-      return selectedCategoryName == 'RPL & IT' &&
-          (nama.contains('RPL') || nama.contains('Software') || nama.contains('Teknologi'));
-    }).toList();
+    if (kategoriId == null) return books;
+    return books.where((book) => (book.kategori?['id'] as num?)?.toInt() == kategoriId).toList();
   }
 
   /*
@@ -171,8 +165,9 @@ class BukuProvider extends ChangeNotifier {
     );
   }
 
-  void selectCategory(String categoryName) {
-    selectedCategoryName = categoryName;
+  void selectCategory(Kategori? kategori) {
+    kategoriId = kategori?.id;
+    selectedCategoryName = kategori?.nama ?? 'Semua';
     notifyListeners();
   }
 
@@ -185,7 +180,10 @@ class BukuProvider extends ChangeNotifier {
 
   void pilihKategori(int? id) {
     kategoriId = id;
-    selectedCategoryName = id == null ? 'Semua' : selectedCategoryName;
+    final selected = id == null
+        ? null
+        : kategoris.where((item) => item.id == id).firstOrNull;
+    selectedCategoryName = selected?.nama ?? 'Semua';
     currentPage = 1;
     notifyListeners();
     loadFirst();
