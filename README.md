@@ -12,10 +12,10 @@ Antarmuka pengguna (UI/UX) dirancang dan direkayasa secara presisi mengacu 100% 
 |---|---|---|
 | **1** | **Splash Screen** | Gradient biru malam (`#0F2654` ke `#0A1B3D`), wadah icon rounded bercahaya (neon cyan book), teks brand *"Pustaka Digital"*, badge *"Akses Presensi & Katalog Cerdas"*, dynamic animated progress bar, status loading *"Menghubungkan basis data perpustakaan..."*, footer identitas *"SMK Negeri 6 Jember"*. |
 | **2** | **Login Screen** | Hero banner foto perpustakaan modern dengan gradient overlay, label *"PustakaDigital SMK Negeri 6 Jember"*, heading *"Selamat Datang Kembali!"*, kartu putih rounded, tab pill *"Masuk dengan NIS atau Nomor Anggota"*, form NIS & PIN dengan toggle visibility sandi, checkbox *"Ingat Saya"*, tautan *"Lupa PIN / Butuh Bantuan?"*, dan tombol utama *"Masuk"*. |
-| **3** | **Beranda (Home)** | Header identitas logo + lonceng + avatar, kartu sapaan siswa (*Hai, Muhammad Irsyadul I.*, badge *Anggota Aktif*, *NIS 2122.10.490 • XII RPL 3*), bar pencarian dengan filter slider, kartu gradient *"STATUS PEMINJAMAN ANDA"* (buku aktif, countdown jatuh tempo, progress bar sisa hari, link perpanjangan), filter chip kategori (*RPL & IT*, *Sains & Fisika*, *Novel & Fiksi*), carousel horizontal *"Rekomendasi Terpopuler (Top 10)"*, dan grid 2-kolom *"Koleksi Terbaru Ditambahkan"*. |
-| **4** | **Detail Buku** | Cover hero elevasi 3D, judul lengkap, nama penulis berikon toga, rating sivitas (4.8 • 128 ulasan), tag chips metadata (*RPL / Software*, *Indonesia*, *Tahun 2023*, DDC Code), kartu ketersediaan stok warna hijau mint dengan progress bar ketersediaan, kartu lokasi penempatan rak biru muda dengan tombol *"Peta"*, segmented control tab (*Sinopsis*, *Detail Metadata*, *Ulasan*), 4 checklist pill keunggulan, rekomendasi buku terkait di rak yang sama, dan sticky bottom bar (*Tanya Pustakawan* + *Reservasi Pinjam*). |
+| **3** | **Beranda (Home)** | Header identitas logo + lonceng + avatar, kartu sapaan siswa (*Hai, Muhammad Irsyadul I.*, badge *Anggota Aktif*, *NIS 2122.10.490 • XII RPL 3*), bar pencarian dengan filter slider, kartu gradient *"STATUS PEMINJAMAN ANDA"* (buku aktif, countdown jatuh tempo, progress bar sisa hari, link perpanjangan), filter chip kategori (dinamis dari API, tap untuk filter), carousel horizontal *"Rekomendasi Terpopuler (Top 10)"*, dan grid 2-kolom *"Koleksi Terbaru Ditambahkan"*. |
+| **4** | **Detail Buku** | Cover hero elevasi 3D, judul lengkap, nama penulis berikon toga, rating sivitas (4.8 • 128 ulasan), tag chips metadata (*RPL / Software*, *Indonesia*, *Tahun 2023*, DDC Code), kartu ketersediaan stok warna hijau mint dengan progress bar ketersediaan, kartu lokasi penempatan rak biru muda dengan tombol *"Peta"*, segmented control tab (*Sinopsis*, *Detail Metadata*, *Ulasan*), 4 checklist pill keunggulan, rekomendasi buku terkait di rak yang sama, dan sticky bottom bar (*Tanya Pustakawan via WhatsApp* + *Reservasi Pinjam*). |
 | **5** | **Pinjaman Saya** | Header brand, kartu kebijakan peminjaman berbadge *"Kuota 1/3"* (maksimal 3 eksemplar, 7 hari kalender), segmented filter pills (*Sedang Dipinjam*, *Riwayat Selesai*, *Denda & Telat*), kartu transaksi peminjaman (TRX ID, cover, chip kategori, judul, pengarang, lokasi rak, box tanggal pinjam & batas kembali, progress bar waktu pinjam persentase), serta tombol aksi *"Ajukan Perpanjangan Waktu (+7 Hari)"* dengan dialog konfirmasi. |
-| **6** | **Profil Siswa** | Header brand, kartu profil siswa berbadge centang terverifikasi (*Muhammad Irsyadul I.*, *NIS*, asal sekolah, badge penghargaan *Peminjam Teladan*), 3 kartu statistik metrik (*12 Buku Pernah Dibaca*, *1 Buku Sedang Aktif*, *0 Denda & Sanksi*), banner pengingat tenggat jatuh tempo buku aktif (*Tenggat 3 Hari Lagi*), kelompok menu *"AKTIVITAS & PREFERENSI"*, kelompok menu *"PUSAT BANTUAN & PENGATURAN"*, serta tombol *"Keluar Akun"* dengan konfirmasi reset sesi. |
+| **6** | **Profil Siswa** | Header brand, kartu profil siswa berbadge centang terverifikasi (*Muhammad Irsyadul I.*, *NIS*, asal sekolah, badge penghargaan *Peminjam Teladan*), 3 kartu statistik metrik (*12 Buku Pernah Dibaca*, *1 Buku Sedang Aktif*, *0 Denda & Sanksi*), banner pengingat tenggat jatuh tempo buku aktif (*Tenggat 3 Hari Lagi*), kelompok menu *"AKTIVITAS & PREFERENSI"*, kelompok menu *"PUSAT BANTUAN & PENGATURAN"* (termasuk tombol *Hubungi Pustakawan via WhatsApp*), serta tombol *"Keluar Akun"* dengan konfirmasi reset sesi. |
 
 ---
 
@@ -52,7 +52,7 @@ Aplikasi dibangun dengan pemisahan tanggung jawab yang modular dan terstruktur:
 ```
 lib/
 ├── core/
-│   ├── api_client.dart          # HTTP Client ke Backend Laravel REST API (/api/v1)
+│   ├── api_client.dart          # HTTP Client ke Backend REST API (/api/v1)
 │   ├── app_constants.dart       # Konstanta kebijakan pinjam & data sekolah
 │   └── app_theme.dart           # Design system, tema Material 3, dan token warna
 ├── models/
@@ -88,9 +88,26 @@ lib/
 ### 1. Prasyarat
 * Flutter SDK versi 3.20+ (Dart 3.x)
 * Emulator Android atau perangkat fisik Android dengan USB Debugging aktif
-* (Opsional) Backend REST API Laravel berjalan di local host
+* Backend REST API Laravel berjalan (lokal atau production Railway)
 
-### 2. Menjalankan Backend Laravel (Tugas A)
+### 2. Konfigurasi Backend URL
+
+Edit `lib/core/api_client.dart` untuk mengatur base URL:
+
+```dart
+// Lokal (Laragon)
+static const String baseUrl = 'http://10.0.2.2:8000/api/v1';  // Emulator
+
+// atau Perangkat Fisik (gunakan IP lokal Anda)
+static const String baseUrl = 'http://192.168.1.100:8000/api/v1';
+
+// Production (Railway)
+static const String baseUrl = 'https://rest-api-perpustakaan-production.up.railway.app/api/v1';
+```
+
+**Android Emulator Note:** Gunakan `10.0.2.2` untuk akses host lokal (bukan `localhost` atau `127.0.0.1`).
+
+### 3. Menjalankan Backend Laravel (Tugas A)
 Buka terminal pada folder `Website/rest-api-perpustakaan`:
 ```bash
 cd "../Website/rest-api-perpustakaan"
@@ -98,9 +115,9 @@ composer install
 php artisan migrate --seed
 php artisan serve
 ```
-*Base URL backend:* `http://127.0.0.1:8000/api/v1` (atau `http://10.0.2.2:8000/api/v1` untuk Android Emulator).
+*Base URL backend:* `http://127.0.0.1:8000/api/v1`
 
-### 3. Menjalankan Aplikasi Flutter (Tugas B)
+### 4. Menjalankan Aplikasi Flutter (Tugas B)
 Buka terminal pada direktori `Anodor`:
 ```bash
 # Ambil dependencies
@@ -121,9 +138,93 @@ flutter run
 
 ---
 
+## 📲 Fitur Utama
+
+### 1. Login & Autentikasi Siswa
+- Login dengan NIS + PIN via `POST /api/v1/login`
+- Bearer token disimpan di `SharedPreferences` dengan kunci `auth_token`
+- Session persisten: login data di-cache lokal
+
+### 2. Katalog Buku & Filter Kategori
+- **GET** `/api/v1/buku` — Daftar buku dengan pagination
+- **Filter chip kategori** dinamis dari `GET /api/v1/kategori`
+- Tap chip → filter buku by kategori_id
+- Search by judul, ISBN, penulis, penerbit
+
+### 3. Detail Buku & Sampul
+- Cover image dari endpoint: `GET /api/v1/buku/{id}/sampul`
+- Fallback placeholder jika URL 404 (graceful error)
+- Sampul otomatis di-crop ke portrait 2:3 di backend
+- Tab: Sinopsis, Detail Metadata, Ulasan
+
+### 4. Peminjaman & Perpanjangan
+- Tampilkan status peminjaman aktif (kartu gradient dengan countdown)
+- Tombol perpanjang → `POST /api/v1/peminjaman/{id}/perpanjang` (+7 hari)
+- Riwayat peminjaman: Sedang Dipinjam, Selesai, Denda & Telat
+
+### 5. WhatsApp Integration (Hubungi Pustakawan)
+- Endpoint `GET /api/v1/config` mengembalikan:
+  ```json
+  {
+    "whatsapp_admin": "+6282345678901",
+    "template_wa": "Halo {nama}, NIS {nis} kelas {kelas}. Saya ingin bertanya tentang buku..."
+  }
+  ```
+- Button "Hubungi Pustakawan" → buka WhatsApp dengan URL:
+  ```
+  https://wa.me/<nomor>?text=<encoded-pesan>
+  ```
+- Gunakan package: `url_launcher`
+
+### 6. Profil Siswa & Statistik
+- Tampilkan: nama, NIS, kelas, asal sekolah
+- Statistik: Buku pernah dibaca, buku aktif, denda & sanksi
+- Menu: Edit profil (pending), Ganti PIN, Hubungi Pustakawan, Keluar
+
+---
+
+## 🔌 API Integration Points
+
+### Config Endpoint (WhatsApp & Settings)
+```
+GET /api/v1/config
+Response:
+{
+  "nama_sekolah": "SMK Negeri 6 Jember",
+  "nama_perpustakaan": "Perpustakaan SMK Negeri 6 Jember",
+  "whatsapp_admin": "+6282345678901",
+  "template_wa": "Halo {nama}, NIS {nis} kelas {kelas}. ...",
+  "durasi_peminjaman": 7,
+  "batas_buku": 3,
+  "durasi_perpanjangan": 7
+}
+```
+
+### Login Response (Bearer Token)
+```
+POST /api/v1/login
+Request: { "nis": "2122.10.490", "pin": "1234" }
+Response:
+{
+  "token": "eyJ0eXAiOiJKV1QiLCJhbGc...",
+  "user": {
+    "id": 1,
+    "nis": "2122.10.490",
+    "nama": "Muhammad Irsyadul I.",
+    "kelas": "XII RPL 3",
+    "sekolah": "SMK Negeri 6 Jember"
+  }
+}
+```
+
+### Production API URL
+**Railway Production:** `https://rest-api-perpustakaan-production.up.railway.app/api/v1`
+
+---
+
 ## 🤖 Tugas E — Dokumentasi Pemanfaatan AI
 
-Proyek ini memanfaatkan bantuan AI (Antigravity AI Agent) untuk mempercepat siklus rekayasa perangkat lunak pada beberapa aspek kunci:
+Proyek ini memanfaatkan bantuan AI (Kiro AI Agent) untuk mempercepat siklus rekayasa perangkat lunak pada beberapa aspek kunci:
 
 | Aspek Pekerjaan | Peran Bantuan AI | Contoh Prompt yang Digunakan |
 |---|---|---|
@@ -132,3 +233,70 @@ Proyek ini memanfaatkan bantuan AI (Antigravity AI Agent) untuk mempercepat sikl
 | **3. State Management & Storage** | Merancang integrasi `MultiProvider` (`AuthProvider`, `BukuProvider`, `PinjamanProvider`) dan persistensi `SharedPreferences` untuk menyimpan status autentikasi siswa dan riwayat transaksi. | *"Implementasikan session management siswa menggunakan SharedPreferences dengan fallback profil"* |
 | **4. Penyusunan Automated Tests** | Membuat 6 skenario widget test komprehensif pada `test/widget_test.dart` yang memverifikasi keberadaan komponen kunci dari setiap layar Figma. | *"Buatkan widget test lengkap untuk memvalidasi keberadaan elemen pada 6 layar prototype"* |
 | **5. Dokumentasi Terpadu** | Mengompilasi dokumentasi arsitektur, panduan instalasi, dan laporan deliverable Tugas A hingga E secara rapi dan profesional. | *"Buatkan dokumentasi README lengkap yang memetakan Tugas A-E secara mendetail"* |
+| **6. Backend Integration & API Debugging** | Diagnosa dan fix bug 500 error pada endpoint `/admin/buku` dan `/admin/master/*/reassign`, include image processing (sampul crop), orphan book reassignment, WhatsApp config, CSV import. | *"Error sever 500 di Railway, analisis keseluruhan projek cari bugnya"* |
+| **7. Production Deployment** | Setup Railway deployment, Dockerfile optimization (GD extension, Doctrine DBAL), database migration untuk nullable FK, production URL configuration. | *"Setup Railway production deployment dengan auto-rebuild, Dockerfile dengan GD extension"* |
+
+---
+
+## 🧪 Automated Testing
+
+```bash
+flutter test
+```
+
+Test coverage mencakup:
+- Splash screen animation & loading state
+- Login form validation (NIS, PIN)
+- Katalog buku display & filter kategori
+- Detail buku rendering (cover, metadata, tabs)
+- Peminjaman status & perpanjangan button
+- Profil siswa & statistik display
+- WhatsApp URL generation & button interaction
+
+---
+
+## 📦 Dependencies
+
+```yaml
+dependencies:
+  flutter:
+    sdk: flutter
+  provider: ^6.0.0               # State management
+  http: ^1.1.0                   # HTTP client
+  shared_preferences: ^2.2.0     # Local storage
+  intl: ^0.19.0                  # Date formatting
+  url_launcher: ^6.1.0           # WhatsApp integration
+```
+
+---
+
+## 🔒 Security Notes
+
+- Token Bearer disimpan di `SharedPreferences` (session-based, bukan encrypted storage untuk development)
+- Production: Pertimbangkan `flutter_secure_storage` untuk token encryption
+- API calls selalu include header: `Authorization: Bearer <token>`
+- Validasi response status code; handle 401 Unauthorized → redirect login
+
+---
+
+## 🆘 Troubleshooting
+
+### Error: "Connection refused" saat login
+- Pastikan backend Laravel running: `php artisan serve`
+- Check base URL di `api_client.dart` sesuai target (lokal vs production)
+- Android Emulator: Gunakan `10.0.2.2` untuk localhost
+
+### Sampul buku tidak muncul (404)
+- Verify endpoint: `GET /api/v1/buku/{id}/sampul` accessible
+- Check Railway storage symlink: `storage/app/public` → `public/storage`
+- Fallback UI menampilkan placeholder jika image 404
+
+### WhatsApp button tidak buka
+- Verify paket `url_launcher` di pubspec.yaml
+- Check nomor WhatsApp format: `+62...` (international)
+- Android: Pastikan WhatsApp app terinstall di perangkat
+
+### Gradle build error
+- Clean: `flutter clean && flutter pub get`
+- Update: `flutter upgrade`
+- Regenerate: `flutter pub get --enforce-lockfile`
