@@ -248,7 +248,7 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              '${buku.dipinjamCount} sedang dipinjam mahasiswa',
+                              '${buku.dipinjamCount} sedang dipinjam',
                               style: const TextStyle(
                                 fontSize: 11.5,
                                 color: AppTheme.textMuted,
@@ -295,12 +295,12 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
             _buildTabContent(buku),
             const SizedBox(height: 22),
 
-            // Section: Buku Terkait di Rak RPL
+            // Section: Buku Terkait
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
-                  'Buku Terkait di Rak RPL',
+                  'Buku Terkait',
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
