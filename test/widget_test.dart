@@ -74,7 +74,7 @@ void main() {
     await tester.pumpWidget(createTestApp(const DetailBukuScreen(bukuId: 1)));
 
     expect(find.text('Detail Buku'), findsOneWidget);
-    expect(find.text('Sinopsis & Ringkasan'), findsOneWidget);
+    expect(find.text('Sinopsis'), findsOneWidget);
     expect(find.text('Tanya Pustakawan'), findsOneWidget);
     expect(find.text('Reservasi Pinjam'), findsOneWidget);
   });
@@ -83,7 +83,7 @@ void main() {
     await tester.pumpWidget(createTestApp(const PinjamanScreen()));
 
     expect(find.text('Pinjaman Saya'), findsOneWidget);
-    expect(find.text('Kebijakan'), findsOneWidget);
+    expect(find.text('Aturan & Notifikasi Pengembalian'), findsOneWidget);
     expect(find.text('Sedang Dipinjam'), findsOneWidget);
     // Tanpa data dummy: tidak ada tombol perpanjangan untuk pinjaman dummy.
     expect(find.text('Ajukan Perpanjangan Waktu (+1 Hari)'), findsNothing);

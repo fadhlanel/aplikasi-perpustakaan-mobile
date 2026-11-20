@@ -2,6 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pustaka_digital/providers/pinjaman_provider.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('PinjamanProvider notifyListeners disposal safety', () {
     test('notifyListeners should not crash when no listeners', () {
       final provider = PinjamanProvider();
