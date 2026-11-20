@@ -367,42 +367,51 @@ class PinjamanProvider extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
-  Future<void> fetchApiLoans() async {
-    activeLoans = <Peminjaman>[];
-    historyLoans = <Peminjaman>[];
-    dendaLoans = <Peminjaman>[];
+  Future<void>? _fetchingLoans;
+
+  Future<void> fetchApiLoans() {
+    final ongoing = _fetchingLoans;
+    if (ongoing != null) return ongoing;
+    final future = _fetchApiLoans();
+    _fetchingLoans = future;
+    future.whenComplete(() => _fetchingLoans = null);
+    return future;
+  }
+
+  Future<void> _fetchApiLoans() async {
     try {
       final res = await ApiClient.getJson('/peminjaman');
       final list = res['data'];
-      if (list is List && list.isNotEmpty) {
+      if (list is List) {
         await OfflineCache.saveLoans(res);
         final parsed = list
             .whereType<Map<String, dynamic>>()
             .map(Peminjaman.fromJson)
             .toList();
 
-        final active = parsed
+        activeLoans = parsed
             .where((p) => !p.sudahDikembalikan && !p.isReservasiTidakAktif)
             .toList();
-        final returned = parsed
+        historyLoans = parsed
             .where((p) => p.sudahDikembalikan || p.isReservasiTidakAktif)
             .toList();
-
-        activeLoans = active;
-        historyLoans = returned;
+        dendaLoans = <Peminjaman>[];
         notifyListeners();
       }
     } catch (_) {
-      final cached = await OfflineCache.getLoans();
-      final list = cached?['data'];
-      if (list is List) {
-        final parsed = list.whereType<Map<String, dynamic>>().map(Peminjaman.fromJson).toList();
-        activeLoans = parsed.where((p) => !p.sudahDikembalikan).toList();
-        historyLoans = parsed.where((p) => p.sudahDikembalikan).toList();
-        error = 'Menampilkan data peminjaman terakhir yang tersimpan.';
-      } else {
-        error = 'Data peminjaman tidak dapat dimuat dari server.';
+      // Data lama tetap dipakai saat refresh gagal, termasuk saat polling.
+      if (activeLoans.isEmpty && historyLoans.isEmpty) {
+        final cached = await OfflineCache.getLoans();
+        final list = cached?['data'];
+        if (list is List) {
+          final parsed = list.whereType<Map<String, dynamic>>().map(Peminjaman.fromJson).toList();
+          activeLoans = parsed.where((p) => !p.sudahDikembalikan && !p.isReservasiTidakAktif).toList();
+          historyLoans = parsed.where((p) => p.sudahDikembalikan || p.isReservasiTidakAktif).toList();
+        }
       }
+      error = activeLoans.isEmpty && historyLoans.isEmpty
+          ? 'Data peminjaman tidak dapat dimuat dari server.'
+          : 'Menampilkan data peminjaman terakhir yang tersimpan.';
       notifyListeners();
     }
   }

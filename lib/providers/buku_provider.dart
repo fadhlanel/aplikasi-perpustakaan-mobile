@@ -238,9 +238,24 @@ class BukuProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> loadFirst() async {
-    _setLoading(true, error: null);
-    notifyListeners();
+  Future<void>? _loadingFirst;
+
+  Future<void> loadFirst() {
+    final ongoing = _loadingFirst;
+    if (ongoing != null) return ongoing;
+    final future = _loadFirst();
+    _loadingFirst = future;
+    future.whenComplete(() => _loadingFirst = null);
+    return future;
+  }
+
+  Future<void> _loadFirst() async {
+    // Refresh silents: data lama tetap tampil sampai respons baru tiba.
+    final initialLoad = items.isEmpty;
+    if (initialLoad) {
+      _setLoading(true, error: null);
+      notifyListeners();
+    }
 
     try {
       final res = await ApiClient.getJson('/buku', query: {
@@ -266,7 +281,7 @@ class BukuProvider extends ChangeNotifier {
       // jangan sembunyikan di balik data cache.
       if (e is ApiException && !e.isNetworkError) {
         _setLoading(false, error: e.message);
-      } else {
+      } else if (items.isEmpty) {
         final cached = await OfflineCache.getBooks();
         final cachedItems = cached == null ? const <Buku>[] : _parseBukuList(cached);
         items = cachedItems;
@@ -274,6 +289,9 @@ class BukuProvider extends ChangeNotifier {
         latestBooks = cachedItems.reversed.take(4).toList(growable: false);
         total = cachedItems.length;
         _setLoading(false, error: cachedItems.isEmpty ? 'Data buku tidak dapat dimuat dari server.' : 'Menampilkan data terakhir yang tersimpan.');
+      } else {
+        // Gagal refresh: jangan ganti data yang sedang tampil dengan cache.
+        _setLoading(false, error: null);
       }
     } finally {
       notifyListeners();

@@ -62,6 +62,7 @@ class BookCoverWidget extends StatelessWidget {
           child: Image.network(
             resolvedUrl.toString(),
             fit: BoxFit.cover,
+            gaplessPlayback: true,
             errorBuilder: (_, error, stack) => _buildStyledCover(),
           ),
         ),

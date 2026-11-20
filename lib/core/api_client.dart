@@ -50,6 +50,9 @@ class ApiClient {
   /// `null` saat pengguna belum masuk.
   static String? authToken;
 
+  /// HTTP client injection untuk test. `null` memakai client production.
+  static http.Client? testClient;
+
   /// Dipanggil oleh AuthProvider saat inisialisasi. Saat API mengembalikan 401
   /// (token anggota di-reset oleh admin), callback ini menghapus sesi lokal
   /// dan mengembalikan pengguna ke halaman login.
@@ -69,7 +72,7 @@ class ApiClient {
     if (query != null && query.isNotEmpty) {
       uri = uri.replace(queryParameters: {...uri.queryParameters, ...query});
     }
-    return _send(() => http.get(uri, headers: _headers));
+    return _send(() => (testClient ?? http.Client()).get(uri, headers: _headers));
   }
 
   static Future<Map<String, dynamic>> postJson(
@@ -78,7 +81,7 @@ class ApiClient {
   }) {
     final uri = Uri.parse('$baseUrl$path');
     return _send(
-      () => http.post(uri, headers: _headers, body: jsonEncode(body ?? {})),
+      () => (testClient ?? http.Client()).post(uri, headers: _headers, body: jsonEncode(body ?? {})),
     );
   }
 
@@ -88,7 +91,7 @@ class ApiClient {
   }) {
     final uri = Uri.parse('$baseUrl$path');
     return _send(
-      () => http.put(uri, headers: _headers, body: jsonEncode(body ?? {})),
+      () => (testClient ?? http.Client()).put(uri, headers: _headers, body: jsonEncode(body ?? {})),
     );
   }
 

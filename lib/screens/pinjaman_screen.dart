@@ -1289,6 +1289,9 @@ class _PinjamanScreenState extends State<PinjamanScreen> {
   }
 
   Widget _buildHistoryLoanCard(Peminjaman loan) {
+    final dibatalkan = loan.isReservasiDibatalkan;
+    final kedaluwarsa = loan.isReservasiExpired;
+    final reservasiTidakAktif = dibatalkan || kedaluwarsa;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -1315,19 +1318,21 @@ class _PinjamanScreenState extends State<PinjamanScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      loan.trxId,
-                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.textMuted),
+                    Flexible(
+                      child: Text(
+                        loan.trxId,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.textMuted),
+                      ),
                     ),
+                    const SizedBox(width: 4),
                     CustomBadge(
-                      label: loan.isReservasiDibatalkan
-                          ? 'Dibatalkan'
-                          : loan.isReservasiExpired
-                              ? 'Kedaluwarsa'
+                      label: dibatalkan
+                          ? 'Reservasi Dibatalkan'
+                          : kedaluwarsa
+                              ? 'Reservasi Kedaluwarsa'
                               : 'Dikembalikan',
-                      type: loan.isReservasiDibatalkan || loan.isReservasiExpired
-                          ? BadgeType.warning
-                          : BadgeType.tersedia,
+                      type: reservasiTidakAktif ? BadgeType.warning : BadgeType.tersedia,
                       fontSize: 10,
                     ),
                   ],
@@ -1345,7 +1350,7 @@ class _PinjamanScreenState extends State<PinjamanScreen> {
                   style: const TextStyle(fontSize: 11, color: AppTheme.textMuted),
                 ),
                 const SizedBox(height: 4),
-                if (loan.isKembaliMandiri) ...[
+                if (!reservasiTidakAktif && loan.isKembaliMandiri) ...[
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
@@ -1367,15 +1372,25 @@ class _PinjamanScreenState extends State<PinjamanScreen> {
                   const SizedBox(height: 4),
                 ],
                 Text(
-                  'Dipinjam ${loan.tanggalPinjam} • Dikembalikan tepat waktu',
-                  style: const TextStyle(fontSize: 10.5, color: Color(0xFF047857), fontWeight: FontWeight.w500),
+                  reservasiTidakAktif
+                      ? dibatalkan
+                          ? 'Reservasi dibatalkan • stok dikembalikan otomatis'
+                          : 'Reservasi kedaluwarsa • stok dikembalikan otomatis'
+                      : 'Dipinjam ${loan.tanggalPinjam} • Dikembalikan tepat waktu',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    color: reservasiTidakAktif ? const Color(0xFFB45309) : const Color(0xFF047857),
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-                const SizedBox(height: 8),
-                OutlinedButton.icon(
-                  onPressed: () => _showRatingDialog(loan),
-                  icon: Icon(loan.rating == null ? Icons.star_border : Icons.edit_outlined, size: 16),
-                  label: Text(loan.rating == null ? 'Beri rating' : 'Ubah rating'),
-                ),
+                if (!reservasiTidakAktif) ...[
+                  const SizedBox(height: 8),
+                  OutlinedButton.icon(
+                    onPressed: () => _showRatingDialog(loan),
+                    icon: Icon(loan.rating == null ? Icons.star_border : Icons.edit_outlined, size: 16),
+                    label: Text(loan.rating == null ? 'Beri rating' : 'Ubah rating'),
+                  ),
+                ],
               ],
             ),
           ),
