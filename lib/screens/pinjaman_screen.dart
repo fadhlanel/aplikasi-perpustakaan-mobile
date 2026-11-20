@@ -1152,40 +1152,65 @@ class _PinjamanScreenState extends State<PinjamanScreen> {
               ],
             ),
           ] else if (loan.isBooking) ...[
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: loan.isBookingSiapDiambil ? const Color(0xFFE6F7F0) : AppTheme.softBlueBackground,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: loan.isBookingSiapDiambil ? const Color(0xFFB9F0D8) : const Color(0xFFDCEBFA),
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    loan.isBookingSiapDiambil ? Icons.storefront_rounded : Icons.schedule_rounded,
-                    size: 16,
-                    color: loan.isBookingSiapDiambil ? AppTheme.mintGreen : AppTheme.primaryNavy,
-                  ),
-                  const SizedBox(width: 8),
-                  Flexible(
-                    child: Text(
-                      loan.isBookingSiapDiambil
-                          ? 'Siap Diambil Hari Ini di Perpustakaan'
-                          : 'Jadwal Ambil: ${loan.tanggalAmbil ?? loan.tanggalPinjam}',
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.bold,
-                        color: loan.isBookingSiapDiambil ? const Color(0xFF065F46) : AppTheme.primaryNavy,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (loan.bisaBatalkanReservasi) ...[
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => provider.batalkanReservasi(loan.id),
+                      icon: const Icon(Icons.cancel_rounded, size: 16),
+                      label: const Text(
+                        'Batalkan Reservasi',
+                        style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold),
                       ),
-                      overflow: TextOverflow.ellipsis,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppTheme.dangerRed,
+                        side: const BorderSide(color: AppTheme.dangerRed, width: 1.2),
+                        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
                     ),
                   ),
+                  const SizedBox(height: 8),
                 ],
-              ),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: loan.isBookingSiapDiambil ? const Color(0xFFE6F7F0) : AppTheme.softBlueBackground,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: loan.isBookingSiapDiambil ? const Color(0xFFB9F0D8) : const Color(0xFFDCEBFA),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        loan.isBookingSiapDiambil ? Icons.storefront_rounded : Icons.schedule_rounded,
+                        size: 16,
+                        color: loan.isBookingSiapDiambil ? AppTheme.mintGreen : AppTheme.primaryNavy,
+                      ),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          loan.isBookingSiapDiambil
+                              ? 'Siap Diambil Hari Ini di Perpustakaan'
+                              : 'Jadwal Ambil: ${loan.tanggalAmbil ?? loan.tanggalPinjam}',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.bold,
+                            color: loan.isBookingSiapDiambil ? const Color(0xFF065F46) : AppTheme.primaryNavy,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ],
         ],
@@ -1294,9 +1319,15 @@ class _PinjamanScreenState extends State<PinjamanScreen> {
                       loan.trxId,
                       style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.textMuted),
                     ),
-                    const CustomBadge(
-                      label: 'Dikembalikan',
-                      type: BadgeType.tersedia,
+                    CustomBadge(
+                      label: loan.isReservasiDibatalkan
+                          ? 'Dibatalkan'
+                          : loan.isReservasiExpired
+                              ? 'Kedaluwarsa'
+                              : 'Dikembalikan',
+                      type: loan.isReservasiDibatalkan || loan.isReservasiExpired
+                          ? BadgeType.warning
+                          : BadgeType.tersedia,
                       fontSize: 10,
                     ),
                   ],

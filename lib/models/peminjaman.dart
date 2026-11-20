@@ -29,6 +29,7 @@ class Peminjaman {
     this.catatanKembali,
     this.statusReservasi,
     this.isBooking = false,
+    this.bisaBatalkanReservasi = false,
     this.buktiPendingKonfirmasi = false,
   });
 
@@ -59,9 +60,11 @@ class Peminjaman {
       }
     }
     final status = json['status']?.toString() ?? 'dipinjam';
+    final statusReservasi = json['status_reservasi']?.toString();
     final sisaJam = (json['sisa_jam'] as num?)?.toInt();
     final sisaHari = (json['sisa_hari'] as num?)?.toInt() ?? (status == 'dikembalikan' ? 0 : 3);
-    final isBooking = json['is_booking'] == true || json['status_reservasi'] == 'booking';
+    final isBooking = json['is_booking'] == true || statusReservasi == 'booking';
+    final bisaBatalkanReservasi = json['bisa_batalkan_reservasi'] == true;
     final isHampirTenggat = !isBooking && (json['hampir_tenggat'] == true ||
         (status != 'dikembalikan' && ((sisaJam != null && sisaJam <= 5) || sisaHari <= 0)));
 
@@ -106,8 +109,9 @@ class Peminjaman {
       fotoBuktiUrl: pengembalian?['foto_bukti_url']?.toString() ?? json['foto_bukti_url']?.toString(),
       tipeKembali: pengembalian?['tipe_kembali']?.toString() ?? json['tipe_kembali']?.toString(),
       catatanKembali: pengembalian?['catatan']?.toString() ?? json['catatan']?.toString(),
-      statusReservasi: json['status_reservasi']?.toString(),
+      statusReservasi: statusReservasi,
       isBooking: isBooking,
+      bisaBatalkanReservasi: bisaBatalkanReservasi,
       buktiPendingKonfirmasi: json['bukti_pending_konfirmasi'] == true,
     );
   }
@@ -165,10 +169,15 @@ class Peminjaman {
   final String? catatanKembali;
   final String? statusReservasi;
   final bool isBooking;
+  final bool bisaBatalkanReservasi;
   final bool buktiPendingKonfirmasi;
 
   bool get sudahDikembalikan => status == 'dikembalikan';
   bool get isKembaliMandiri => sudahDikembalikan && (fotoBuktiUrl != null || tipeKembali == 'mandiri');
+
+  bool get isReservasiDibatalkan => statusReservasi == 'dibatalkan';
+  bool get isReservasiExpired => statusReservasi == 'expired';
+  bool get isReservasiTidakAktif => isReservasiDibatalkan || isReservasiExpired;
 
   /// Cek apakah booking sudah masuk tanggal ambil (hari ini atau sebelumnya).
   bool get isBookingSiapDiambil {

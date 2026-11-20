@@ -264,6 +264,23 @@ class PinjamanProvider extends ChangeNotifier {
     }
   }
 
+  /// Siswa membatalkan reservasi booking yang belum diserahkan.
+  Future<bool> batalkanReservasi(int peminjamanId) async {
+    loading = true;
+    notifyListeners();
+
+    try {
+      await ApiClient.postJson('/peminjaman/$peminjamanId/batalkan-reservasi');
+      await fetchApiLoans();
+      loading = false;
+      return true;
+    } catch (_) {
+      loading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<bool> perpanjangPinjaman(int peminjamanId, {int days = 1}) async {
     if (!activeLoans.any((item) => item.id == peminjamanId)) {
       return false;
@@ -333,8 +350,12 @@ class PinjamanProvider extends ChangeNotifier {
             .map(Peminjaman.fromJson)
             .toList();
 
-        final active = parsed.where((p) => !p.sudahDikembalikan).toList();
-        final returned = parsed.where((p) => p.sudahDikembalikan).toList();
+        final active = parsed
+            .where((p) => !p.sudahDikembalikan && !p.isReservasiTidakAktif)
+            .toList();
+        final returned = parsed
+            .where((p) => p.sudahDikembalikan || p.isReservasiTidakAktif)
+            .toList();
 
         activeLoans = active;
         historyLoans = returned;
