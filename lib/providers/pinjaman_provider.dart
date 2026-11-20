@@ -191,7 +191,7 @@ class PinjamanProvider extends ChangeNotifier {
       judulBuku: buku.judul,
       pengarang: 'Oleh: ${buku.namaPenulis}',
       kategoriNama: 'Informatika / ${buku.namaKategori}',
-      tanggalPinjam: 'Hari ini ($jamStr WIB)',
+      tanggalPinjam: tanggalAmbil ?? 'Hari ini ($jamStr WIB)',
       tanggalJatuhTempo: tanggalAmbil ?? jatuhTempoStr,
       status: 'dipinjam',
       sisaHari: durasiHari,
@@ -227,23 +227,23 @@ class PinjamanProvider extends ChangeNotifier {
         if (base64Foto != null && base64Foto.isNotEmpty) 'foto_bukti': base64Foto,
         'catatan': catatan ?? 'Dikembalikan mandiri oleh siswa di perpustakaan',
       });
+    } on ApiException catch (e) {
+      loading = false;
+      error = e.message;
+      notifyListeners();
+      return false;
     } catch (_) {
-      // Fallback state lokal jika offline
+      loading = false;
+      error = 'Gagal mengunggah bukti pengembalian. Coba lagi.';
+      notifyListeners();
+      return false;
     }
 
-    // Status tetap di activeLoans tapi dengan tanda buktiPendingKonfirmasi
-    activeLoans = activeLoans.map((item) {
-      if (item.id == peminjamanId) {
-        return item.tandaiKembaliMandiri(
-          fotoUrl: fotoPath,
-          catatan: catatan,
-        );
-      }
-      return item;
-    }).toList();
-
+    // Upload sukses: sinkron state dari server via fetchApiLoans
+    // (bukan hanya update lokal) supaya buktiPendingKonfirmasi & foto tidak hilang.
     loading = false;
-    notifyListeners();
+    error = null;
+    await fetchApiLoans();
     return true;
   }
 
@@ -254,9 +254,8 @@ class PinjamanProvider extends ChangeNotifier {
 
     try {
       await ApiClient.postJson('/peminjaman/$peminjamanId/batalkan-bukti');
-      await fetchApiLoans();
+      await fetchApiLoans(); // fetchApiLoans sudah notifyListeners
       loading = false;
-      notifyListeners();
       return true;
     } catch (_) {
       loading = false;
@@ -311,6 +310,7 @@ class PinjamanProvider extends ChangeNotifier {
       if (raw is Map<String, dynamic>) {
         final updated = Peminjaman.fromJson(raw);
         historyLoans = historyLoans.map((item) => item.id == peminjamanId ? updated : item).toList();
+        notifyListeners();
       }
       return true;
     } catch (e) {

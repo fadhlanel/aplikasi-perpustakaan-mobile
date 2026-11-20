@@ -7,7 +7,6 @@ import 'package:provider/provider.dart';
 
 import '../core/app_theme.dart';
 import '../models/peminjaman.dart';
-import '../providers/buku_provider.dart';
 import '../providers/pinjaman_provider.dart';
 import '../widgets/book_cover_widget.dart';
 import '../widgets/custom_badge.dart';
@@ -861,11 +860,20 @@ class _PinjamanScreenState extends State<PinjamanScreen> {
                   color: AppTheme.textMuted,
                 ),
               ),
-              CustomBadge(
-                label: isHampirTenggat ? 'Hampir Tenggat (< 5 Jam)' : 'Sisa ${loan.sisaHari} Hari',
-                type: isHampirTenggat ? BadgeType.warning : BadgeType.tersedia,
-                fontSize: 10,
-              ),
+              // Badge: Bukti Pending Konfirmasi / Hampir Tenggat / Sisa Hari
+              if (loan.buktiPendingKonfirmasi) ...[
+                CustomBadge(
+                  label: 'Bukti Terkirim',
+                  type: BadgeType.dipinjam,
+                  fontSize: 10,
+                ),
+              ] else ...[
+                CustomBadge(
+                  label: isHampirTenggat ? 'Hampir Tenggat (< 5 Jam)' : 'Sisa ${loan.sisaHari} Hari',
+                  type: isHampirTenggat ? BadgeType.warning : BadgeType.tersedia,
+                  fontSize: 10,
+                ),
+              ],
             ],
           ),
           const SizedBox(height: 12),
@@ -887,6 +895,41 @@ class _PinjamanScreenState extends State<PinjamanScreen> {
                     child: Text(
                       'Peringatan: Kurang dari 5 jam lagi batas pengembalian! Anda bisa kembalikan sekarang dengan foto bukti di perpustakaan.',
                       style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF92400E), height: 1.3),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+
+          // Status: Bukti Terkirim (Menunggu Konfirmasi Admin)
+          if (loan.buktiPendingKonfirmasi) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEFF6FF),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFBFDBFE)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.hourglass_top_rounded, size: 20, color: Color(0xFF6366F1)),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Bukti Terkirim — Menunggu Konfirmasi Admin',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF3730A3)),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Anda telah mengunggah foto bukti pengembalian. Admin akan memverifikasi segera. Anda dapat membatalkan jika ingin mengubah bukti.',
+                          style: const TextStyle(fontSize: 11, color: Color(0xFF4338CA), height: 1.3),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -1029,40 +1072,19 @@ class _PinjamanScreenState extends State<PinjamanScreen> {
           const SizedBox(height: 12),
 
           // Action Buttons: Seimbang & Proporsional
-          Row(
-            children: [
-              Expanded(
-                flex: loan.bisaPerpanjang ? 1 : 1,
-                child: SizedBox(
-                  height: 40,
-                  child: ElevatedButton.icon(
-                    onPressed: () => _handleKembalikanMandiri(loan, provider),
-                    icon: const Icon(Icons.camera_alt_outlined, size: 16),
-                    label: const Text(
-                      'Kembalikan',
-                      style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0D9488),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      elevation: 0,
-                    ),
-                  ),
-                ),
-              ),
-              if (loan.bisaPerpanjang) ...[
-                const SizedBox(width: 10),
+          // State bukti pending konfirmasi -> hanya tombol batal, bukan Kembalikan/+1 Hari.
+          // State reservasi (isBooking) -> tanpa aksi pinjam, tampilkan info reservasi.
+          if (loan.buktiPendingKonfirmasi) ...[
+            Row(
+              children: [
                 Expanded(
-                  flex: 1,
                   child: SizedBox(
                     height: 40,
                     child: OutlinedButton.icon(
-                      onPressed: () => _handlePerpanjang(loan, provider),
-                      icon: const Icon(Icons.autorenew_rounded, size: 16),
+                      onPressed: () => provider.batalkanBuktiKembalikan(loan.id),
+                      icon: const Icon(Icons.edit_rounded, size: 16),
                       label: const Text(
-                        '+1 Hari',
+                        'Batalkan & Unggah Ulang',
                         style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold),
                       ),
                       style: OutlinedButton.styleFrom(
@@ -1075,8 +1097,74 @@ class _PinjamanScreenState extends State<PinjamanScreen> {
                   ),
                 ),
               ],
-            ],
-          ),
+            ),
+          ] else if (!loan.isBooking && loan.statusReservasi != 'booking') ...[
+            Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: 40,
+                    child: ElevatedButton.icon(
+                      onPressed: () => _handleKembalikanMandiri(loan, provider),
+                      icon: const Icon(Icons.camera_alt_outlined, size: 16),
+                      label: const Text(
+                        'Kembalikan',
+                        style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0D9488),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        elevation: 0,
+                      ),
+                    ),
+                  ),
+                ),
+                if (loan.bisaPerpanjang) ...[
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: SizedBox(
+                      height: 40,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _handlePerpanjang(loan, provider),
+                        icon: const Icon(Icons.autorenew_rounded, size: 16),
+                        label: const Text(
+                          '+1 Hari',
+                          style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppTheme.primaryNavy,
+                          side: const BorderSide(color: Color(0xFFCBD5E1), width: 1.2),
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ] else if (loan.isBooking) ...[
+            Container(
+              width: double.infinity,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppTheme.softBlueBackground,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Center(
+                child: Text(
+                  'Status Reservasi: Menunggu Tanggal Ambil',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primaryNavy,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -1084,39 +1172,67 @@ class _PinjamanScreenState extends State<PinjamanScreen> {
 
   void _showRatingDialog(Peminjaman loan) {
     var rating = loan.rating?.round() ?? 0;
+    var submitting = false;
     final komentar = TextEditingController();
     final messenger = ScaffoldMessenger.of(context);
     final provider = context.read<PinjamanProvider>();
     showDialog<void>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
+        builder: (dialogStateContext, setDialogState) => AlertDialog(
           title: Text(loan.rating == null ? 'Beri rating buku' : 'Ubah rating buku'),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Wrap(alignment: WrapAlignment.center, spacing: 8, children: List.generate(5, (index) => IconButton(
-                  onPressed: () => setState(() => rating = index + 1),
+                  onPressed: submitting ? null : () => setDialogState(() => rating = index + 1),
                   icon: Icon(index < rating ? Icons.star : Icons.star_border, color: Colors.amber),
                 ))),
-                TextField(controller: komentar, maxLines: 2, decoration: const InputDecoration(labelText: 'Komentar (opsional)')),
+                TextField(
+                  controller: komentar,
+                  maxLines: 2,
+                  enabled: !submitting,
+                  decoration: const InputDecoration(labelText: 'Komentar (opsional)'),
+                ),
               ],
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Batal')),
+            TextButton(
+              onPressed: submitting ? null : () => Navigator.pop(dialogContext),
+              child: const Text('Batal'),
+            ),
             ElevatedButton(
-              onPressed: rating == 0 ? null : () async {
-                Navigator.pop(dialogContext);
-                final ok = await provider.submitRating(
-                  peminjamanId: loan.id,
-                  rating: rating,
-                  komentar: komentar.text,
-                );
-                messenger.showSnackBar(SnackBar(content: Text(ok ? 'Rating berhasil disimpan' : (provider.error ?? 'Gagal menyimpan rating'))));
-              },
-              child: const Text('Simpan'),
+              onPressed: rating == 0 || submitting
+                  ? null
+                  : () async {
+                      setDialogState(() => submitting = true);
+                      final ok = await provider.submitRating(
+                        peminjamanId: loan.id,
+                        rating: rating,
+                        komentar: komentar.text,
+                      );
+                      if (!dialogContext.mounted) {
+                        return;
+                      }
+                      Navigator.pop(dialogContext);
+                      if (!mounted) {
+                        return;
+                      }
+                      messenger.showSnackBar(
+                        SnackBar(
+                          content: Text(ok ? 'Rating berhasil disimpan' : (provider.error ?? 'Gagal menyimpan rating')),
+                        ),
+                      );
+                    },
+              child: submitting
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Simpan'),
             ),
           ],
         ),
