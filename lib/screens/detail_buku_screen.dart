@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../core/app_theme.dart';
 import '../models/buku.dart';
 import '../providers/auth_provider.dart';
+import '../providers/config_provider.dart';
 import '../providers/buku_provider.dart';
 import '../providers/pinjaman_provider.dart';
 import '../widgets/book_cover_widget.dart';
@@ -58,6 +59,7 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
   Widget build(BuildContext context) {
     final bukuProv = context.watch<BukuProvider>();
     final auth = context.watch<AuthProvider>();
+    final config = context.watch<ConfigProvider>();
     final pinjamanProv = context.watch<PinjamanProvider>();
 
     final buku = bukuProv.items.firstWhere(
@@ -425,10 +427,19 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
               const SizedBox(width: 10),
 
               // Reservasi Peminjaman (Primary Navy button)
+              if (!config.layananAktif)
+                Expanded(
+                  child: Text(
+                    config.statusLabel,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.dangerRed),
+                  ),
+                )
+              else
               Expanded(
                 flex: 5,
                 child: ElevatedButton.icon(
-                  onPressed: _isPinjamLoading || !bukuTersedia
+                  onPressed: _isPinjamLoading || !bukuTersedia || !config.layananAktif
                       ? null
                       : () => _handlePinjam(context, buku, auth, pinjamanProv),
                   icon: _isPinjamLoading

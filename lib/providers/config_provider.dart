@@ -1,12 +1,21 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 
 import '../core/api_client.dart';
 
 /// Konfigurasi perpustakaan dari `GET /api/v1/config` yang dikelola admin
 /// pada halaman Pengaturan Sistem. Status layanan memengaruhi perilaku
 /// aplikasi mobile (badge status & aksi peminjaman).
-class ConfigProvider extends ChangeNotifier {
-  ConfigProvider();
+class ConfigProvider extends ChangeNotifier with WidgetsBindingObserver {
+  ConfigProvider() {
+    WidgetsBinding.instance.addObserver(this);
+    _startPolling();
+  }
+
+  Timer? _timer;
+  static const _pollInterval = Duration(seconds: 3);
 
   String statusLayanan = 'aktif';
   String namaPerpustakaan = 'PustakaDigital';
@@ -28,6 +37,28 @@ class ConfigProvider extends ChangeNotifier {
       default:
         return 'Perpustakaan Aktif';
     }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      load();
+      _startPolling();
+    } else if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
+      _timer?.cancel();
+    }
+  }
+
+  void _startPolling() {
+    _timer?.cancel();
+    _timer = Timer.periodic(_pollInterval, (_) => load());
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _timer?.cancel();
+    super.dispose();
   }
 
   Future<void> load() async {

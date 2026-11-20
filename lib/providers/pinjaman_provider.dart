@@ -1,11 +1,20 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import '../core/api_client.dart';
 import '../core/offline_cache.dart';
 import '../models/buku.dart';
 import '../models/peminjaman.dart';
 
-class PinjamanProvider extends ChangeNotifier {
-  PinjamanProvider();
+class PinjamanProvider extends ChangeNotifier with WidgetsBindingObserver {
+  PinjamanProvider() {
+    WidgetsBinding.instance.addObserver(this);
+    _startPolling();
+  }
+
+  Timer? _timer;
+  static const _pollInterval = Duration(seconds: 3);
 
   int selectedTab = 0; // 0: Sedang Dipinjam, 1: Riwayat Selesai, 2: Denda & Telat
   bool loading = false;
@@ -14,6 +23,28 @@ class PinjamanProvider extends ChangeNotifier {
   List<Peminjaman> activeLoans = <Peminjaman>[];
   List<Peminjaman> historyLoans = <Peminjaman>[];
   List<Peminjaman> dendaLoans = <Peminjaman>[];
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      fetchApiLoans();
+      _startPolling();
+    } else if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
+      _timer?.cancel();
+    }
+  }
+
+  void _startPolling() {
+    _timer?.cancel();
+    _timer = Timer.periodic(_pollInterval, (_) => fetchApiLoans());
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _timer?.cancel();
+    super.dispose();
+  }
 
   void clear() {
     activeLoans = [];

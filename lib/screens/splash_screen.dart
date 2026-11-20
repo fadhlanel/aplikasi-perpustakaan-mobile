@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../core/app_theme.dart';
 import '../providers/auth_provider.dart';
+import '../providers/config_provider.dart';
 import 'login_screen.dart';
 import 'main_navigation.dart';
 
@@ -23,6 +24,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   void initState() {
     super.initState();
+    context.read<ConfigProvider>().load();
     _progressController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2200),
