@@ -7,7 +7,6 @@ import '../core/app_theme.dart';
 import '../core/network_service.dart';
 import '../models/buku.dart';
 import '../models/kategori.dart';
-import '../models/peminjaman.dart';
 import '../providers/auth_provider.dart';
 import '../providers/buku_provider.dart';
 import '../providers/config_provider.dart';
@@ -242,20 +241,148 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     super.dispose();
   }
 
+  void _showHomeNotificationCenter(BuildContext context, PinjamanProvider pinjamanProv, NetworkService network) {
+    showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        final activeLoans = pinjamanProv.activeLoans;
+        final nearDueLoans = activeLoans.where((l) => l.isHampirTenggat).toList();
+
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Row(
+                  children: [
+                    Icon(Icons.notifications_active_rounded, color: AppTheme.accentBlue, size: 22),
+                    SizedBox(width: 10),
+                    Text(
+                      'Notifikasi Pengembalian Buku',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textDark),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Pengingat aktif otomatis 5 jam sebelum waktu jatuh tempo buku berakhir',
+                  style: TextStyle(fontSize: 11.5, color: AppTheme.textMuted),
+                ),
+                const SizedBox(height: 16),
+                if (nearDueLoans.isNotEmpty) ...[
+                  for (final loan in nearDueLoans) ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFEF3C7),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFFDE68A)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.alarm_rounded, size: 18, color: Color(0xFFB45309)),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Peringatan: ${loan.judulBuku}',
+                                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF92400E)),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Waktu peminjaman tersisa kurang dari 5 jam lagi (${loan.tanggalJatuhTempo}). Anda dapat mengembalikan lebih awal dengan menekan tombol kembalikan dan foto bukti di perpustakaan.',
+                            style: const TextStyle(fontSize: 11.5, color: Color(0xFF78350F), height: 1.3),
+                          ),
+                          const SizedBox(height: 8),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF0D9488),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              ),
+                              onPressed: () {
+                                Navigator.pop(ctx);
+                                widget.onNavigateTab?.call(2);
+                              },
+                              icon: const Icon(Icons.camera_alt_rounded, size: 14),
+                              label: const Text('Kembalikan Sekarang', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+                ] else if (activeLoans.isNotEmpty) ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEFF6FF),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFBFDBFE)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.check_circle_outline_rounded, color: AppTheme.primaryNavy, size: 20),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Batas peminjaman Anda masih aman. Notifikasi otomatis akan muncul 5 jam sebelum jatuh tempo.',
+                            style: const TextStyle(fontSize: 11.5, color: AppTheme.primaryNavy, height: 1.3),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ] else ...[
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20),
+                    child: Center(
+                      child: Text(
+                        'Tidak ada peminjaman aktif. Semua buku telah dikembalikan.',
+                        style: TextStyle(fontSize: 12.5, color: AppTheme.textMuted),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void _openDetail(Buku buku) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => DetailBukuScreen(bukuId: buku.id),
       ),
     );
-  }
-
-  String _relativeTime(DateTime dt) {
-    final diff = DateTime.now().difference(dt);
-    if (diff.inMinutes < 1) return 'baru saja';
-    if (diff.inMinutes < 60) return '${diff.inMinutes} menit lalu';
-    if (diff.inHours < 24) return '${diff.inHours} jam lalu';
-    return '${dt.day}/${dt.month}/${dt.year}';
   }
 
   @override
@@ -349,19 +476,25 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         // Status Keterhubungan REST API
                         const ApiStatusBadge(),
                         IconButton(
-                          onPressed: () {
-                            final sync = network.lastSyncTime;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  sync != null
-                                      ? 'Data terakhir disinkronkan ke database: ${_relativeTime(sync)}'
-                                      : 'Belum ada sinkronisasi data. Tarik ke bawah untuk sinkron.',
+                          onPressed: () => _showHomeNotificationCenter(context, pinjamanProv, network),
+                          icon: Stack(
+                            children: [
+                              const Icon(Icons.notifications_outlined, size: 24),
+                              if (pinjamanProv.hampirTenggatLoans.isNotEmpty)
+                                Positioned(
+                                  right: 0,
+                                  top: 0,
+                                  child: Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: const BoxDecoration(
+                                      color: AppTheme.amberWarning,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            );
-                          },
-                          icon: const Icon(Icons.notifications_outlined, size: 24),
+                            ],
+                          ),
                           color: AppTheme.primaryNavy,
                         ),
                         InkWell(
@@ -386,49 +519,34 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   ],
                 ),
 
-                // Indikator sinkronisasi database terakhir
-                if (network.lastSyncTime != null) ...[
+                // Badge status layanan perpustakaan (selalu tampil)
+                ...[ 
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      const Icon(Icons.sync_rounded,
-                          size: 12, color: AppTheme.textMuted),
-                      const SizedBox(width: 4),
-                      Flexible(
+                      // Status Layanan Perpustakaan dari Web Admin
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: config.statusLayanan == 'aktif'
+                              ? const Color(0xFFD1FAE5)
+                              : config.statusLayanan == 'pemeliharaan'
+                                  ? const Color(0xFFFEF3C7)
+                                  : const Color(0xFFFEE2E2),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
                         child: Text(
-                          'Sinkron ke database: ${_relativeTime(network.lastSyncTime!)}',
+                          config.statusLabel,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                              fontSize: 10.5, color: AppTheme.textMuted),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      // Status Layanan Perpustakaan dari Web Admin
-                      Flexible(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
+                          style: TextStyle(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.bold,
                             color: config.statusLayanan == 'aktif'
-                                ? const Color(0xFFD1FAE5)
+                                ? const Color(0xFF065F46)
                                 : config.statusLayanan == 'pemeliharaan'
-                                    ? const Color(0xFFFEF3C7)
-                                    : const Color(0xFFFEE2E2),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            config.statusLabel,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.bold,
-                              color: config.statusLayanan == 'aktif'
-                                  ? const Color(0xFF065F46)
-                                  : config.statusLayanan == 'pemeliharaan'
-                                      ? const Color(0xFF92400E)
-                                      : const Color(0xFF991B1B),
-                            ),
+                                    ? const Color(0xFF92400E)
+                                    : const Color(0xFF991B1B),
                           ),
                         ),
                       ),
@@ -723,6 +841,31 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         ),
                         const SizedBox(height: 14),
 
+                        // Banner peringatan H-5 Jam jika hampir jatuh tempo
+                        if (activeLoan.isHampirTenggat) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                            decoration: BoxDecoration(
+                              color: Colors.amber.shade400.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: Colors.amber.shade300),
+                            ),
+                            child: const Row(
+                              children: [
+                                Icon(Icons.alarm_on_rounded, size: 15, color: Colors.amber),
+                                SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'Kurang dari 5 jam batas pengembalian! Anda bisa kembalikan sekarang dengan foto bukti di perpustakaan.',
+                                    style: TextStyle(color: Colors.white, fontSize: 10.5, fontWeight: FontWeight.bold, height: 1.25),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+
                         // Card Content
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -841,27 +984,47 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                 ),
                               ),
                             ),
-                            InkWell(
-                              onTap: () => widget.onNavigateTab?.call(2),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      'Perpanjang Pinjaman',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        color: AppTheme.cyanAccent,
-                                        fontSize: 11.5,
-                                        fontWeight: FontWeight.bold,
+                            Wrap(
+                              spacing: 12,
+                              runSpacing: 4,
+                              children: [
+                                InkWell(
+                                  onTap: () => widget.onNavigateTab?.call(2),
+                                  child: const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.camera_alt_outlined, size: 13, color: AppTheme.cyanAccent),
+                                      SizedBox(width: 4),
+                                      Text(
+                                        'Kembalikan Buku',
+                                        style: TextStyle(
+                                          color: AppTheme.cyanAccent,
+                                          fontSize: 11.5,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
-                                    ),
+                                    ],
                                   ),
-                                  const SizedBox(width: 4),
-                                  const Icon(Icons.arrow_forward_rounded, size: 14, color: AppTheme.cyanAccent),
-                                ],
-                              ),
+                                ),
+                                InkWell(
+                                  onTap: () => widget.onNavigateTab?.call(2),
+                                  child: const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        'Perpanjang',
+                                        style: TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 11.5,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      SizedBox(width: 4),
+                                      Icon(Icons.arrow_forward_rounded, size: 13, color: Colors.white70),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -1260,7 +1423,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Cover with rack chip
+            // Cover
             Stack(
               children: [
                 Center(
@@ -1271,28 +1434,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     width: 140,
                     height: 195,
                     borderRadius: 10,
-                  ),
-                ),
-                Positioned(
-                  bottom: 6,
-                  left: 6,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.7),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.shelves, size: 11, color: Colors.white),
-                        SizedBox(width: 4),
-                        Text(
-                          'Rak-04',
-                          style: TextStyle(color: Colors.white, fontSize: 9.5, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
                   ),
                 ),
               ],

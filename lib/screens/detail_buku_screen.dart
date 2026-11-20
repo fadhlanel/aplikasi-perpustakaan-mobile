@@ -613,7 +613,7 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
         onTap: () => setState(() => _selectedTab = index),
         borderRadius: BorderRadius.circular(10),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
           decoration: BoxDecoration(
             color: isSelected ? Colors.white : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
@@ -630,6 +630,9 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
           child: Center(
             child: Text(
               label,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: isSelected ? AppTheme.primaryNavy : AppTheme.textMuted,
                 fontSize: 11.5,
@@ -713,16 +716,288 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
       return;
     }
 
-    final selectedDate = await showDatePicker(
+    int selectedDurasi = 1; // Default 1 hari (siswa bisa pilih 1, 2, atau 3 hari)
+    DateTime selectedDate = DateTime.now();
+
+    final confirmed = await showModalBottomSheet<bool>(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 30)),
-      helpText: 'Pilih tanggal ambil buku',
-      cancelText: 'Batal',
-      confirmText: 'Pilih',
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetCtx) {
+        return StatefulBuilder(
+          builder: (ctx, setModalState) {
+            final now = DateTime.now();
+            final returnDate = selectedDate.add(Duration(days: selectedDurasi));
+            final jamStr = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 16,
+                bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEFF6FF),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(Icons.bookmark_add_rounded, color: AppTheme.accentBlue, size: 22),
+                        ),
+                        const SizedBox(width: 10),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Form Peminjaman Buku',
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textDark),
+                              ),
+                              Text(
+                                'Pilih durasi & jadwal ambil buku',
+                                style: TextStyle(fontSize: 11.5, color: AppTheme.textMuted),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppTheme.softBlueBackground,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          BookCoverWidget(
+                            judul: buku.judul,
+                            penulis: buku.namaPenulis,
+                            sampulUrl: buku.sampul,
+                            width: 38,
+                            height: 52,
+                            borderRadius: 6,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  buku.judul,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppTheme.textDark),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  buku.namaPenulis,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontSize: 11, color: AppTheme.textMuted),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+
+                    // Pilihan Durasi Peminjaman (1, 2, atau 3 Hari)
+                    const Text(
+                      'Pilih Durasi Peminjaman',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppTheme.textDark),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Pilih lama peminjaman (1 - 3 hari)',
+                      style: TextStyle(fontSize: 11.5, color: AppTheme.textMuted),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        for (final day in [1, 2, 3]) ...[
+                          if (day > 1) const SizedBox(width: 8),
+                          Expanded(
+                            child: InkWell(
+                              onTap: () => setModalState(() => selectedDurasi = day),
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                                decoration: BoxDecoration(
+                                  color: selectedDurasi == day ? AppTheme.primaryNavy : Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: selectedDurasi == day ? AppTheme.primaryNavy : const Color(0xFFCBD5E1),
+                                    width: selectedDurasi == day ? 2 : 1,
+                                  ),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      '$day Hari',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                        color: selectedDurasi == day ? Colors.white : AppTheme.textDark,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      day == 1 ? '1 Hari' : (day == 3 ? '3 Hari' : '2 Hari'),
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: selectedDurasi == day ? Colors.white70 : AppTheme.textMuted,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Pilihan Waktu Pengambilan (Maksimal 5 hari dari sekarang)
+                    const Text(
+                      'Waktu Pengambilan Buku',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppTheme.textDark),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Maksimal 5 hari dari hari ini untuk mengambil buku',
+                      style: TextStyle(fontSize: 11.5, color: AppTheme.textMuted),
+                    ),
+                    const SizedBox(height: 8),
+                    InkWell(
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: ctx,
+                          initialDate: selectedDate,
+                          firstDate: DateTime.now(),
+                          lastDate: DateTime.now().add(const Duration(days: 5)),
+                        );
+                        if (picked != null) {
+                          setModalState(() => selectedDate = picked);
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.calendar_today_rounded, size: 18, color: AppTheme.primaryNavy),
+                                const SizedBox(width: 10),
+                                Text(
+                                  '${selectedDate.day.toString().padLeft(2, '0')}/${selectedDate.month.toString().padLeft(2, '0')}/${selectedDate.year}',
+                                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textDark),
+                                ),
+                              ],
+                            ),
+                            const Text(
+                              'Ubah Jadwal',
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.accentBlue),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Notifikasi H-5 Jam Pengembalian Card
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFFBEB),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFFDE68A)),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.alarm_on_rounded, size: 20, color: Color(0xFFB45309)),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Notifikasi Pengingat Pengembalian (H-5 Jam)',
+                                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF92400E)),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Batas pengembalian: ${returnDate.day.toString().padLeft(2, '0')}/${returnDate.month.toString().padLeft(2, '0')}/${returnDate.year} pukul $jamStr WIB.\n'
+                                  'Notifikasi peringatan akan aktif 5 jam sebelum jam pengembalian tersebut.',
+                                  style: const TextStyle(fontSize: 11, color: Color(0xFF78350F), height: 1.3),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+
+                    // Tombol Konfirmasi
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryNavy,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        onPressed: () => Navigator.of(sheetCtx).pop(true),
+                        child: Text(
+                          'Konfirmasi Pinjam ($selectedDurasi Hari)',
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
-    if (selectedDate == null || !mounted) return;
+
+    if (confirmed != true || !mounted) return;
 
     setState(() => _isPinjamLoading = true);
 
@@ -731,6 +1006,7 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
       nis: auth.profile.nis,
       nama: auth.profile.nama,
       tanggalAmbil: '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}',
+      durasiHari: selectedDurasi,
     );
 
     if (!mounted || !context.mounted) return;
@@ -742,6 +1018,10 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
       return;
     }
     context.read<BukuProvider>().decrementStock(buku.id);
+
+    final due = selectedDate.add(Duration(days: selectedDurasi));
+    final now = DateTime.now();
+    final jamStr = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
 
     showDialog(
       context: context,
@@ -762,9 +1042,9 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
           ],
         ),
         content: Text(
-          'Buku "${buku.judul}" berhasil direservasi atas nama ${auth.profile.nama}. '
-          'Tanggal ambil: ${selectedDate.day.toString().padLeft(2, '0')}/${selectedDate.month.toString().padLeft(2, '0')}/${selectedDate.year}.'
-          ,
+          'Buku "${buku.judul}" berhasil dipinjam selama $selectedDurasi hari atas nama ${auth.profile.nama}.\n\n'
+          'Batas pengembalian: ${due.day.toString().padLeft(2, '0')}/${due.month.toString().padLeft(2, '0')}/${due.year} pukul $jamStr WIB.\n'
+          'Pengingat pengembalian otomatis akan aktif 5 jam sebelum waktu jatuh tempo.',
           style: const TextStyle(fontSize: 13, height: 1.4),
         ),
         actions: [
@@ -773,39 +1053,6 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
               Navigator.of(ctx).pop();
             },
             child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FeaturePill extends StatelessWidget {
-  const _FeaturePill({required this.text});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF0FDF4),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFDCFCE7)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.check_circle_rounded, size: 14, color: AppTheme.mintGreen),
-          const SizedBox(width: 6),
-          Text(
-            text,
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF166534),
-            ),
           ),
         ],
       ),

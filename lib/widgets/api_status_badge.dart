@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../core/app_theme.dart';
 import '../core/network_service.dart';
 
-/// Badge status API ringkas: `● API Aktif`.
+/// Badge status koneksi ringkas: hanya ikon awan berwarna sesuai status.
 /// Klik = refresh status (animasi spinner), tanpa dialog.
 class ApiStatusBadge extends StatefulWidget {
   const ApiStatusBadge({super.key});
@@ -27,80 +27,60 @@ class _ApiStatusBadgeState extends State<ApiStatusBadge> {
   Widget build(BuildContext context) {
     final network = context.watch<NetworkService>();
 
-    Color bg;
-    Color border;
-    Color dot;
-    Color textColor;
-    String text;
+    Color iconColor;
+    IconData iconData;
+    String tooltip;
 
     switch (network.status) {
       case ConnectionStatus.unknown:
-        bg = const Color(0xFFF1F5F9);
-        border = const Color(0xFFE2E8F0);
-        dot = const Color(0xFF94A3B8);
-        textColor = const Color(0xFF475569);
-        text = 'Memeriksa...';
+        iconColor = const Color(0xFF94A3B8);
+        iconData = Icons.cloud_outlined;
+        tooltip = 'Memeriksa koneksi...';
         break;
       case ConnectionStatus.connected:
-        bg = const Color(0xFFECFDF5);
-        border = const Color(0xFFA7F3D0);
-        dot = AppTheme.mintGreen;
-        textColor = const Color(0xFF065F46);
-        text = 'API Aktif';
+        iconColor = AppTheme.mintGreen;
+        iconData = Icons.cloud_done_rounded;
+        tooltip = 'Server Terhubung';
         break;
       case ConnectionStatus.apiOffline:
-        bg = const Color(0xFFFFFBEB);
-        border = const Color(0xFFFDE68A);
-        dot = AppTheme.amberWarning;
-        textColor = const Color(0xFF92400E);
-        text = 'Mode Offline';
+        iconColor = AppTheme.amberWarning;
+        iconData = Icons.cloud_off_rounded;
+        tooltip = 'Mode Offline';
         break;
       case ConnectionStatus.noInternet:
-        bg = const Color(0xFFFEF2F2);
-        border = const Color(0xFFFECACA);
-        dot = AppTheme.dangerRed;
-        textColor = const Color(0xFF991B1B);
-        text = 'Tidak Ada Internet';
+        iconColor = AppTheme.dangerRed;
+        iconData = Icons.cloud_off_rounded;
+        tooltip = 'Tidak Ada Internet';
         break;
     }
 
     final busy = _checking || network.isChecking;
 
-    return InkWell(
-      onTap: () => _refresh(network),
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 132),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: border),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            busy
-                ? SizedBox(
-                    width: 7,
-                    height: 7,
-                    child: CircularProgressIndicator(strokeWidth: 1.5, color: dot),
-                  )
-                : Container(
-                    width: 7,
-                    height: 7,
-                    decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: () => _refresh(network),
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: iconColor.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: busy
+              ? SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: iconColor,
                   ),
-            const SizedBox(width: 6),
-            Flexible(
-              child: Text(
-                busy ? 'Memeriksa...' : text,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: textColor),
-              ),
-            ),
-          ],
+                )
+              : Icon(
+                  iconData,
+                  size: 18,
+                  color: iconColor,
+                ),
         ),
       ),
     );

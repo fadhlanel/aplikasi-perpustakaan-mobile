@@ -567,14 +567,14 @@ class _ProfilScreenState extends State<ProfilScreen> {
                       value: hMinus3,
                       activeThumbColor: AppTheme.primaryNavy,
                       title: const Text(
-                        'Pengingat H-3 Sebelum Jatuh Tempo',
+                        'Pengingat 5 Jam Sebelum Jatuh Tempo (H-5 Jam)',
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       subtitle: const Text(
-                        'Memberi waktu persiapan mengembalikan buku ke perpustakaan',
+                        'Peringatan otomatis saat tersisa 5 jam sebelum jam batas waktu pengembalian berakhir',
                         style: TextStyle(
                           fontSize: 11,
                           color: AppTheme.textMuted,
@@ -658,246 +658,6 @@ class _ProfilScreenState extends State<ProfilScreen> {
               ),
             );
           },
-        );
-      },
-    );
-  }
-
-  // 3. Bottom Sheet: Riwayat Kunjungan Perpustakaan
-  void _showVisitHistorySheet(BuildContext context) {
-    final visits = [
-      {
-        'tanggal': 'Hari ini, 09:15 WIB',
-        'lokasi': 'Ruang Sirkulasi & Baca Lt. 2',
-        'status': 'Presensi QR Terverifikasi',
-        'tipe': 'Membaca di Tempat',
-      },
-      {
-        'tanggal': '28 Okt 2024, 13:40 WIB',
-        'lokasi': 'Meja Layanan Sirkulasi',
-        'status': 'Peminjaman Mandiri Sukses',
-        'tipe': 'Sirkulasi Buku',
-      },
-      {
-        'tanggal': '21 Okt 2024, 10:05 WIB',
-        'lokasi': 'Ruang Referensi & Jurnal',
-        'status': 'Presensi QR Terverifikasi',
-        'tipe': 'Studi Mandiri',
-      },
-      {
-        'tanggal': '14 Okt 2024, 11:20 WIB',
-        'lokasi': 'Laboratorium Multimedia',
-        'status': 'Presensi QR Terverifikasi',
-        'tipe': 'Pencarian e-Book',
-      },
-    ];
-
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const Row(
-                  children: [
-                    Icon(
-                      Icons.qr_code_scanner_rounded,
-                      color: AppTheme.accentBlue,
-                      size: 22,
-                    ),
-                    SizedBox(width: 10),
-                    Text(
-                      'Riwayat Kunjungan Perpustakaan',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.textDark,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                const Text(
-                  'Catatan presensi fisik saat berkunjung ke ruang perpustakaan sekolah.',
-                  style: TextStyle(fontSize: 12, color: AppTheme.textMuted),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEFF6FF),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      Column(
-                        children: [
-                          Text(
-                            '4 Kali',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.accentBlue,
-                            ),
-                          ),
-                          SizedBox(height: 2),
-                          Text(
-                            'Bulan Ini',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: AppTheme.textMuted,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(
-                        height: 24,
-                        child: VerticalDivider(color: Color(0xFFBFDBFE)),
-                      ),
-                      Column(
-                        children: [
-                          Text(
-                            '6.5 Jam',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.mintGreen,
-                            ),
-                          ),
-                          SizedBox(height: 2),
-                          Text(
-                            'Durasi Baca',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: AppTheme.textMuted,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(
-                        height: 24,
-                        child: VerticalDivider(color: Color(0xFFBFDBFE)),
-                      ),
-                      Column(
-                        children: [
-                          Text(
-                            '100%',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF047857),
-                            ),
-                          ),
-                          SizedBox(height: 2),
-                          Text(
-                            'Disiplin QR',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: AppTheme.textMuted,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Expanded(
-                  child: ListView.separated(
-                    itemCount: visits.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 8),
-                    itemBuilder: (ctx, i) {
-                      final v = visits[i];
-                      return Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFFEEF2F6)),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF1F5F9),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: const Icon(
-                                Icons.place_outlined,
-                                color: AppTheme.primaryNavy,
-                                size: 18,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    v['lokasi']!,
-                                    style: const TextStyle(
-                                      fontSize: 12.5,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    v['tanggal']!,
-                                    style: const TextStyle(
-                                      fontSize: 11,
-                                      color: AppTheme.textMuted,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFD1FAE5),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                v['tipe']!,
-                                style: const TextStyle(
-                                  fontSize: 9.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF047857),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
         );
       },
     );
@@ -2135,20 +1895,6 @@ class _ProfilScreenState extends State<ProfilScreen> {
                         iconBg: const Color(0xFFEFF6FF),
                         iconColor: AppTheme.accentBlue,
                         onTap: () => _showNotificationSettingsSheet(context),
-                        isDark: isDark,
-                      ),
-                      Divider(
-                        height: 1,
-                        indent: 60,
-                        color: isDark ? AppTheme.darkBorder : null,
-                      ),
-                      _buildMenuItem(
-                        icon: Icons.qr_code_scanner_rounded,
-                        title: 'Riwayat Kunjungan Perpustakaan',
-                        subtitle: 'Presensi fisik & baca di tempat',
-                        iconBg: const Color(0xFFEFF6FF),
-                        iconColor: AppTheme.accentBlue,
-                        onTap: () => _showVisitHistorySheet(context),
                         isDark: isDark,
                       ),
                     ],

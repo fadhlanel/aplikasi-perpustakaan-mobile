@@ -135,11 +135,16 @@ class PinjamanProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  List<Peminjaman> get hampirTenggatLoans =>
+      activeLoans.where((loan) => loan.isHampirTenggat).toList();
+
   Future<bool> pinjamBuku({
     required Buku buku,
     required String nis,
     required String nama,
     String? tanggalAmbil,
+    int durasiHari = 1,
+    String mode = 'booking',
   }) async {
     loading = true;
     error = null;
@@ -151,6 +156,8 @@ class PinjamanProvider extends ChangeNotifier {
         'nis': nis,
         'nama_peminjam': nama,
         'tanggal_ambil': tanggalAmbil,
+        'durasi_hari': durasiHari,
+        'mode': mode,
       });
     } on ApiException catch (e) {
       if (!e.isNetworkError) {
@@ -170,6 +177,11 @@ class PinjamanProvider extends ChangeNotifier {
       return false;
     }
 
+    final now = DateTime.now();
+    final jamStr = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+    final jatuhTempoDt = now.add(Duration(days: durasiHari));
+    final jatuhTempoStr = '${jatuhTempoDt.day.toString().padLeft(2, '0')}/${jatuhTempoDt.month.toString().padLeft(2, '0')}/${jatuhTempoDt.year}';
+
     final newLoan = Peminjaman(
       id: DateTime.now().millisecondsSinceEpoch,
       trxId: 'TRX-2024-${1100 + activeLoans.length + 1}',
@@ -179,19 +191,78 @@ class PinjamanProvider extends ChangeNotifier {
       judulBuku: buku.judul,
       pengarang: 'Oleh: ${buku.namaPenulis}',
       kategoriNama: 'Informatika / ${buku.namaKategori}',
-      tanggalPinjam: 'Hari ini',
-      tanggalJatuhTempo: tanggalAmbil ?? '3 Hari ke depan',
+      tanggalPinjam: 'Hari ini ($jamStr WIB)',
+      tanggalJatuhTempo: tanggalAmbil ?? jatuhTempoStr,
       status: 'dipinjam',
-      sisaHari: 7,
+      sisaHari: durasiHari,
       hariBerjalan: 0,
-      durasiHariTotal: 7,
+      durasiHariTotal: durasiHari,
       bisaPerpanjang: true,
+      jamPinjam: jamStr,
+      sisaJam: durasiHari * 24,
+      isHampirTenggat: false,
+      statusReservasi: mode == 'booking' ? 'booking' : 'dipinjam',
+      isBooking: mode == 'booking',
     );
 
     activeLoans = [newLoan, ...activeLoans];
     loading = false;
     notifyListeners();
     return true;
+  }
+
+  /// Siswa mengembalikan buku mandiri lebih awal dengan bukti foto di perpustakaan.
+  /// Foto bukti diunggah ke admin, menunggu konfirmasi sebelum status resmi berubah.
+  Future<bool> kembalikanBukuMandiri({
+    required int peminjamanId,
+    String? fotoPath,
+    String? base64Foto,
+    String? catatan,
+  }) async {
+    loading = true;
+    notifyListeners();
+
+    try {
+      await ApiClient.postJson('/peminjaman/$peminjamanId/upload-bukti', body: {
+        if (base64Foto != null && base64Foto.isNotEmpty) 'foto_bukti': base64Foto,
+        'catatan': catatan ?? 'Dikembalikan mandiri oleh siswa di perpustakaan',
+      });
+    } catch (_) {
+      // Fallback state lokal jika offline
+    }
+
+    // Status tetap di activeLoans tapi dengan tanda buktiPendingKonfirmasi
+    activeLoans = activeLoans.map((item) {
+      if (item.id == peminjamanId) {
+        return item.tandaiKembaliMandiri(
+          fotoUrl: fotoPath,
+          catatan: catatan,
+        );
+      }
+      return item;
+    }).toList();
+
+    loading = false;
+    notifyListeners();
+    return true;
+  }
+
+  /// Batalkan bukti kembalikan yang diunggah siswa (bisa unggah ulang/edit).
+  Future<bool> batalkanBuktiKembalikan(int peminjamanId) async {
+    loading = true;
+    notifyListeners();
+
+    try {
+      await ApiClient.postJson('/peminjaman/$peminjamanId/batalkan-bukti');
+      await fetchApiLoans();
+      loading = false;
+      notifyListeners();
+      return true;
+    } catch (_) {
+      loading = false;
+      notifyListeners();
+      return false;
+    }
   }
 
   Future<bool> perpanjangPinjaman(int peminjamanId, {int days = 1}) async {

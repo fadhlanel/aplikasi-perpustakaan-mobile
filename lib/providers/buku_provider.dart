@@ -209,6 +209,17 @@ class BukuProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void incrementStock(int bukuId) {
+    Buku update(Buku buku) => buku.id == bukuId
+        ? buku.copyWith(stokTersedia: buku.stokTersedia + 1)
+        : buku;
+
+    items = items.map(update).toList();
+    popularBooks = popularBooks.map(update).toList();
+    latestBooks = latestBooks.map(update).toList();
+    notifyListeners();
+  }
+
   void toggleBookmark(int bukuId) {
     items = items.map((buku) {
       if (buku.id == bukuId) {
