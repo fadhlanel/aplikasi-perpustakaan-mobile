@@ -194,9 +194,9 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
               runSpacing: 6,
               alignment: WrapAlignment.center,
               children: [
-                _buildTagChip('RPL / Software'),
-                _buildTagChip('Indonesia'),
-                _buildTagChip('Tahun ${buku.tahunTerbit}'),
+                for (final tag in buku.tags) _buildTagChip(tag),
+                if (buku.tahunTerbit > 0)
+                  _buildTagChip('Tahun ${buku.tahunTerbit}'),
               ],
             ),
             const SizedBox(height: 18),
@@ -283,7 +283,7 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
               ),
               child: Row(
                 children: [
-                  _buildTabItem(0, 'Sinopsis & Ringkasan'),
+                  _buildTabItem(0, 'Sinopsis'),
                   _buildTabItem(1, 'Detail Metadata'),
                   _buildTabItem(2, 'Ulasan (${buku.ulasanCount})'),
                 ],
@@ -469,10 +469,7 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
 
   Widget _buildTabContent(Buku buku) {
     if (_selectedTab == 0) {
-      final sinopsisText = (buku.sinopsis?.trim().isNotEmpty ?? false)
-          ? buku.sinopsis!.trim()
-          : buku.deskripsiText;
-      final ringkasanText = buku.ringkasan?.trim() ?? '';
+      final sinopsisText = buku.sinopsisText;
 
       return Container(
         width: double.infinity,
@@ -482,48 +479,22 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: const Color(0xFFEEF2F6)),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Tentang Buku Ini',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.textDark,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              sinopsisText,
-              style: const TextStyle(
-                fontSize: 13,
-                color: Color(0xFF334155),
-                height: 1.5,
-              ),
-            ),
-            if (ringkasanText.isNotEmpty) ...[
-              const SizedBox(height: 18),
-              const Text(
-                'Ringkasan',
+        child: sinopsisText.isEmpty
+            ? const Text(
+                'Belum ada sinopsis untuk buku ini.',
                 style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textDark,
+                  fontSize: 13,
+                  color: AppTheme.textMuted,
                 ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                ringkasanText,
+              )
+            : Text(
+                sinopsisText,
                 style: const TextStyle(
                   fontSize: 13,
                   color: Color(0xFF334155),
                   height: 1.5,
                 ),
               ),
-            ],
-          ],
-        ),
       );
     } else if (_selectedTab == 1) {
       return Container(
@@ -540,8 +511,8 @@ class _DetailBukuScreenState extends State<DetailBukuScreen> {
             _buildMetaRow('Penulis', buku.namaPenulis),
             _buildMetaRow('Penerbit', buku.namaPenerbit),
             _buildMetaRow('Tahun Terbit', '${buku.tahunTerbit}'),
-            _buildMetaRow('ISBN', buku.isbn ?? '978-602-05-1234-5'),
-            _buildMetaRow('Bahasa', 'Bahasa Indonesia'),
+            if (buku.isbn?.trim().isNotEmpty ?? false)
+              _buildMetaRow('ISBN', buku.isbn!.trim()),
           ],
         ),
       );

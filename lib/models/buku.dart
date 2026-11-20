@@ -14,8 +14,9 @@ class Buku {
     this.kategori,
     this.penulis,
     this.penerbit,
-    this.rating = 4.8,
-    this.ulasanCount = 128,
+    this.tags = const <String>[],
+    this.rating = 0,
+    this.ulasanCount = 0,
     this.isBookmarked = false,
   });
 
@@ -26,11 +27,18 @@ class Buku {
       deskripsi: json['deskripsi']?.toString(),
       sinopsis: json['sinopsis']?.toString(),
       ringkasan: json['ringkasan']?.toString(),
-      tahunTerbit: (json['tahun_terbit'] as num?)?.toInt() ?? 2023,
-      isbn: json['isbn']?.toString() ?? '978-602-05-1234-5',
+      tahunTerbit: (json['tahun_terbit'] as num?)?.toInt() ?? 0,
+      isbn: json['isbn']?.toString(),
       sampul: json['sampul_url']?.toString() ?? json['sampul']?.toString(),
-      stok: (json['stok'] as num?)?.toInt() ?? 10,
-      stokTersedia: (json['stok_tersedia'] as num?)?.toInt() ?? 8,
+      stok: (json['stok'] as num?)?.toInt() ?? 0,
+      stokTersedia: (json['stok_tersedia'] as num?)?.toInt() ?? 0,
+      tags: (json['tags'] as List<dynamic>?)
+              ?.map((tag) => tag is Map<String, dynamic>
+                  ? tag['nama']?.toString() ?? ''
+                  : tag?.toString() ?? '')
+              .where((tag) => tag.isNotEmpty)
+              .toList() ??
+          const <String>[],
       kategori: json['kategori'] is Map<String, dynamic>
           ? (json['kategori'] as Map<String, dynamic>)
           : null,
@@ -40,8 +48,8 @@ class Buku {
       penerbit: json['penerbit'] is Map<String, dynamic>
           ? (json['penerbit'] as Map<String, dynamic>)
           : null,
-      rating: (json['rating_rata_rata'] as num? ?? json['rating'] as num?)?.toDouble() ?? 4.8,
-      ulasanCount: (json['total_rating'] as num? ?? json['ulasan_count'] as num?)?.toInt() ?? 128,
+      rating: (json['rating_rata_rata'] as num? ?? json['rating'] as num?)?.toDouble() ?? 0,
+      ulasanCount: (json['total_rating'] as num? ?? json['ulasan_count'] as num?)?.toInt() ?? 0,
       isBookmarked: json['is_bookmarked'] == true,
     );
   }
@@ -67,24 +75,19 @@ class Buku {
   final Map<String, dynamic>? kategori;
   final Map<String, dynamic>? penulis;
   final Map<String, dynamic>? penerbit;
+  final List<String> tags;
   final double rating;
   final int ulasanCount;
   final bool isBookmarked;
 
-  String get namaKategori => kategori?['nama']?.toString() ?? 'Teknologi Informasi';
-  String get namaPenulis => penulis?['nama']?.toString() ?? 'Budi Raharjo, S.Kom.';
-  String get namaPenerbit => penerbit?['nama']?.toString() ?? 'Informatika Bandung';
+  String get namaKategori => kategori?['nama']?.toString() ?? '';
+  String get namaPenulis => penulis?['nama']?.toString() ?? '';
+  String get namaPenerbit => penerbit?['nama']?.toString() ?? '';
 
   bool get isTersedia => stokTersedia > 0;
   int get dipinjamCount => (stok - stokTersedia).clamp(0, stok);
 
-  String get deskripsiText {
-    final d = deskripsi?.trim();
-    if (d == null || d.isEmpty) {
-      return 'Buku komprehensif ini menyajikan fondasi arsitektur pengembangan antarmuka modern multi-platform menggunakan Dart dan Flutter framework. Mulai dari pemahaman State Management (BLoC & Provider), integrasi REST API, caching offline SQLite, hingga pipeline deployment ke Google Playstore dan App Store.\n\nDilengkapi dengan studi kasus aplikasi nyata sistem reservasi akademik terintegrasi yang relevan untuk skripsi dan tugas akhir vokasi informatika.';
-    }
-    return d;
-  }
+  String get sinopsisText => sinopsis?.trim() ?? '';
 
   Buku copyWith({
     int? id,
@@ -100,6 +103,7 @@ class Buku {
     Map<String, dynamic>? kategori,
     Map<String, dynamic>? penulis,
     Map<String, dynamic>? penerbit,
+    List<String>? tags,
     double? rating,
     int? ulasanCount,
     bool? isBookmarked,
@@ -118,6 +122,7 @@ class Buku {
       kategori: kategori ?? this.kategori,
       penulis: penulis ?? this.penulis,
       penerbit: penerbit ?? this.penerbit,
+      tags: tags ?? this.tags,
       rating: rating ?? this.rating,
       ulasanCount: ulasanCount ?? this.ulasanCount,
       isBookmarked: isBookmarked ?? this.isBookmarked,
@@ -138,6 +143,7 @@ class Buku {
         'kategori': kategori,
         'penulis': penulis,
         'penerbit': penerbit,
+        'tags': tags,
         'rating_rata_rata': rating,
         'total_rating': ulasanCount,
         'is_bookmarked': isBookmarked,
