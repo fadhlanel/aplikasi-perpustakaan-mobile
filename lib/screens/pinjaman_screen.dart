@@ -860,11 +860,17 @@ class _PinjamanScreenState extends State<PinjamanScreen> {
                   color: AppTheme.textMuted,
                 ),
               ),
-              // Badge: Bukti Pending Konfirmasi / Hampir Tenggat / Sisa Hari
+              // Badge: Bukti Pending Konfirmasi / Booking / Hampir Tenggat / Sisa Hari
               if (loan.buktiPendingKonfirmasi) ...[
-                CustomBadge(
+                const CustomBadge(
                   label: 'Bukti Terkirim',
                   type: BadgeType.dipinjam,
+                  fontSize: 10,
+                ),
+              ] else if (loan.isBooking) ...[
+                CustomBadge(
+                  label: loan.isBookingSiapDiambil ? 'Siap Diambil' : 'Reservasi',
+                  type: loan.isBookingSiapDiambil ? BadgeType.tersedia : BadgeType.tag,
                   fontSize: 10,
                 ),
               ] else ...[
@@ -1148,20 +1154,37 @@ class _PinjamanScreenState extends State<PinjamanScreen> {
           ] else if (loan.isBooking) ...[
             Container(
               width: double.infinity,
-              height: 40,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: AppTheme.softBlueBackground,
+                color: loan.isBookingSiapDiambil ? const Color(0xFFE6F7F0) : AppTheme.softBlueBackground,
                 borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Center(
-                child: Text(
-                  'Status Reservasi: Menunggu Tanggal Ambil',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.primaryNavy,
-                  ),
+                border: Border.all(
+                  color: loan.isBookingSiapDiambil ? const Color(0xFFB9F0D8) : const Color(0xFFDCEBFA),
                 ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    loan.isBookingSiapDiambil ? Icons.storefront_rounded : Icons.schedule_rounded,
+                    size: 16,
+                    color: loan.isBookingSiapDiambil ? AppTheme.mintGreen : AppTheme.primaryNavy,
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      loan.isBookingSiapDiambil
+                          ? 'Siap Diambil Hari Ini di Perpustakaan'
+                          : 'Jadwal Ambil: ${loan.tanggalAmbil ?? loan.tanggalPinjam}',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.bold,
+                        color: loan.isBookingSiapDiambil ? const Color(0xFF065F46) : AppTheme.primaryNavy,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

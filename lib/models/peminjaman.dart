@@ -61,8 +61,9 @@ class Peminjaman {
     final status = json['status']?.toString() ?? 'dipinjam';
     final sisaJam = (json['sisa_jam'] as num?)?.toInt();
     final sisaHari = (json['sisa_hari'] as num?)?.toInt() ?? (status == 'dikembalikan' ? 0 : 3);
-    final isHampirTenggat = json['hampir_tenggat'] == true ||
-        (status != 'dikembalikan' && ((sisaJam != null && sisaJam <= 5) || sisaHari <= 0));
+    final isBooking = json['is_booking'] == true || json['status_reservasi'] == 'booking';
+    final isHampirTenggat = !isBooking && (json['hampir_tenggat'] == true ||
+        (status != 'dikembalikan' && ((sisaJam != null && sisaJam <= 5) || sisaHari <= 0)));
 
     final id = (json['id'] as num?)?.toInt() ?? 0;
     final trxId = json['trx_id']?.toString() ?? 'TRX-2024-${1090 + id}';
@@ -96,7 +97,7 @@ class Peminjaman {
       durasiHariTotal: (json['durasi_hari_total'] as num?)?.toInt() ??
           (json['durasi_pinjam'] as num?)?.toInt() ??
           3,
-      bisaPerpanjang: json['bisa_perpanjang'] != false && status != 'dikembalikan',
+      bisaPerpanjang: json['bisa_perpanjang'] != false && status != 'dikembalikan' && !isBooking,
       rating: (json['ulasan'] is Map ? ((json['ulasan'] as Map)['rating'] as num?)?.toDouble() : null),
       jamPinjam: json['jam_pinjam']?.toString(),
       waktuJatuhTempo: json['waktu_jatuh_tempo']?.toString(),
@@ -106,7 +107,7 @@ class Peminjaman {
       tipeKembali: pengembalian?['tipe_kembali']?.toString() ?? json['tipe_kembali']?.toString(),
       catatanKembali: pengembalian?['catatan']?.toString() ?? json['catatan']?.toString(),
       statusReservasi: json['status_reservasi']?.toString(),
-      isBooking: json['is_booking'] == true || json['status_reservasi'] == 'booking',
+      isBooking: isBooking,
       buktiPendingKonfirmasi: json['bukti_pending_konfirmasi'] == true,
     );
   }
@@ -168,6 +169,19 @@ class Peminjaman {
 
   bool get sudahDikembalikan => status == 'dikembalikan';
   bool get isKembaliMandiri => sudahDikembalikan && (fotoBuktiUrl != null || tipeKembali == 'mandiri');
+
+  /// Cek apakah booking sudah masuk tanggal ambil (hari ini atau sebelumnya).
+  bool get isBookingSiapDiambil {
+    if (!isBooking) return false;
+    final tglStr = tanggalAmbil ?? tanggalPinjam;
+    final dt = DateTime.tryParse(tglStr);
+    if (dt == null) return true;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final target = DateTime(dt.year, dt.month, dt.day);
+    return target.compareTo(today) <= 0;
+  }
+
   double get persentaseWaktu =>
       durasiHariTotal > 0 ? (hariBerjalan / durasiHariTotal).clamp(0.0, 1.0) : 0.0;
   int get persentaseInt => (persentaseWaktu * 100).toInt();
