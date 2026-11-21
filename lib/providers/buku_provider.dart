@@ -279,7 +279,8 @@ class BukuProvider extends ChangeNotifier {
         // API adalah satu-satunya sumber data production.
       }
       _setLoading(false, error: null);
-      if (_dataFingerprint() != before) notifyListeners();
+      // initialLoad harus notify walau data kosong agar spinner hilang.
+      if (initialLoad || _dataFingerprint() != before) notifyListeners();
     } catch (e) {
       // HTTP error (4xx/5xx) bukan masalah jaringan: tampilkan pesan,
       // jangan sembunyikan di balik data cache.
@@ -294,7 +295,7 @@ class BukuProvider extends ChangeNotifier {
         latestBooks = cachedItems.reversed.take(4).toList(growable: false);
         total = cachedItems.length;
         _setLoading(false, error: cachedItems.isEmpty ? 'Data buku tidak dapat dimuat dari server.' : 'Menampilkan data terakhir yang tersimpan.');
-        if (_dataFingerprint() != before) notifyListeners();
+        if (initialLoad || _dataFingerprint() != before) notifyListeners();
       } else {
         // Gagal refresh: jangan ganti data yang sedang tampil dengan cache.
         _setLoading(false, error: null);
@@ -422,7 +423,7 @@ class BukuProvider extends ChangeNotifier {
     final latestIds = latestBooks.map((e) => e.id).toList();
     final kategoriIds = kategoriId != null ? [kategoriId!] : [];
     final queryHash = query.hashCode;
-    return '$dataIds|$popularIds|$latestIds|$kategoriIds|$queryHash';
+    return '$dataIds|$popularIds|$latestIds|$kategoriIds|$queryHash|$loading|$error';
   }
 
   void _setLoading(bool value, {String? error}) {
