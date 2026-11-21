@@ -973,15 +973,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           spacing: 8,
                           runSpacing: 4,
                           children: [
-                            Flexible(
-                              child: Text(
-                                'Dipinjam: ${activeLoan.tanggalPinjam}',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.65),
-                                  fontSize: 11,
-                                ),
+                            Text(
+                              'Dipinjam: ${activeLoan.tanggalPinjam}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.65),
+                                fontSize: 11,
                               ),
                             ),
                             Wrap(
