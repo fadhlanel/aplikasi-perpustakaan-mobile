@@ -26,6 +26,8 @@ class BukuProvider extends ChangeNotifier {
 
   bool get hasMore => currentPage < lastPage;
 
+  List<int> kategoriFingerprint = <int>[];
+
   // Daftar buku khusus untuk Beranda (Figma)
   List<Buku> popularBooks = <Buku>[];
   List<Buku> latestBooks = <Buku>[];
@@ -252,6 +254,7 @@ class BukuProvider extends ChangeNotifier {
   Future<void> _loadFirst() async {
     // Refresh silents: data lama tetap tampil sampai respons baru tiba.
     final initialLoad = items.isEmpty;
+    final before = _dataFingerprint();
     if (initialLoad) {
       _setLoading(true, error: null);
       notifyListeners();
@@ -276,11 +279,13 @@ class BukuProvider extends ChangeNotifier {
         // API adalah satu-satunya sumber data production.
       }
       _setLoading(false, error: null);
+      if (_dataFingerprint() != before) notifyListeners();
     } catch (e) {
       // HTTP error (4xx/5xx) bukan masalah jaringan: tampilkan pesan,
       // jangan sembunyikan di balik data cache.
       if (e is ApiException && !e.isNetworkError) {
         _setLoading(false, error: e.message);
+        notifyListeners();
       } else if (items.isEmpty) {
         final cached = await OfflineCache.getBooks();
         final cachedItems = cached == null ? const <Buku>[] : _parseBukuList(cached);
@@ -289,12 +294,11 @@ class BukuProvider extends ChangeNotifier {
         latestBooks = cachedItems.reversed.take(4).toList(growable: false);
         total = cachedItems.length;
         _setLoading(false, error: cachedItems.isEmpty ? 'Data buku tidak dapat dimuat dari server.' : 'Menampilkan data terakhir yang tersimpan.');
+        if (_dataFingerprint() != before) notifyListeners();
       } else {
         // Gagal refresh: jangan ganti data yang sedang tampil dengan cache.
         _setLoading(false, error: null);
       }
-    } finally {
-      notifyListeners();
     }
   }
 
@@ -321,9 +325,9 @@ class BukuProvider extends ChangeNotifier {
       lastPage = (meta['last_page'] as num?)?.toInt() ?? lastPage;
       total = (meta['total'] as num?)?.toInt() ?? total;
     } catch (_) {
+      // error loading more; keep data
     } finally {
       loadingMore = false;
-      notifyListeners();
     }
   }
 
@@ -332,14 +336,19 @@ class BukuProvider extends ChangeNotifier {
       final res = await ApiClient.getJson('/kategori', query: {'per_page': '50', 'page': '1'});
       final data = res['data'];
       if (data is List) {
-        kategoris = data
+        final newKategoris = data
             .whereType<Map<String, dynamic>>()
             .map(Kategori.fromJson)
             .toList(growable: false);
+        final before = kategoriFingerprint.toString();
+        kategoriFingerprint = newKategoris.map((k) => k.id).toList();
+        if (before != kategoriFingerprint.toString()) {
+          kategoris = newKategoris;
+          notifyListeners();
+        }
       }
     } catch (_) {
-    } finally {
-      notifyListeners();
+      // gagal: pertahankan kategori lama, jangan notify
     }
   }
 
@@ -404,6 +413,16 @@ class BukuProvider extends ChangeNotifier {
       // Return empty list on error
     }
     return [];
+  }
+
+  // Fingerprint data untuk menghindari notifyListeners() kosong saat data identik
+  String _dataFingerprint() {
+    final dataIds = items.map((e) => e.id).toList();
+    final popularIds = popularBooks.map((e) => e.id).toList();
+    final latestIds = latestBooks.map((e) => e.id).toList();
+    final kategoriIds = kategoriId != null ? [kategoriId!] : [];
+    final queryHash = query.hashCode;
+    return '$dataIds|$popularIds|$latestIds|$kategoriIds|$queryHash';
   }
 
   void _setLoading(bool value, {String? error}) {

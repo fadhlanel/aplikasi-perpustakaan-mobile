@@ -369,6 +369,14 @@ class PinjamanProvider extends ChangeNotifier with WidgetsBindingObserver {
 
   Future<void>? _fetchingLoans;
 
+  // Fingerprint data untuk menghindari notifyListeners() kosong saat data identik
+  String _dataFingerprint() {
+    final activeIds = activeLoans.map((l) => l.id).toList();
+    final histIds = historyLoans.map((l) => l.id).toList();
+    final dendaIds = dendaLoans.map((l) => l.id).toList();
+    return '$activeIds|$histIds|$dendaIds|${error ?? ''}';
+  }
+
   Future<void> fetchApiLoans() {
     final ongoing = _fetchingLoans;
     if (ongoing != null) return ongoing;
@@ -389,14 +397,21 @@ class PinjamanProvider extends ChangeNotifier with WidgetsBindingObserver {
             .map(Peminjaman.fromJson)
             .toList();
 
-        activeLoans = parsed
+        final newActive = parsed
             .where((p) => !p.sudahDikembalikan && !p.isReservasiTidakAktif)
             .toList();
-        historyLoans = parsed
+        final newHistory = parsed
             .where((p) => p.sudahDikembalikan || p.isReservasiTidakAktif)
             .toList();
-        dendaLoans = <Peminjaman>[];
-        notifyListeners();
+        final newDenda = <Peminjaman>[];
+
+        // Hanya notify jika data benar-benar berubah
+        if (_dataFingerprint() != '$newActive|$newHistory|$newDenda|') {
+          activeLoans = newActive;
+          historyLoans = newHistory;
+          dendaLoans = newDenda;
+          notifyListeners();
+        }
       }
     } catch (_) {
       // Data lama tetap dipakai saat refresh gagal, termasuk saat polling.
@@ -405,14 +420,17 @@ class PinjamanProvider extends ChangeNotifier with WidgetsBindingObserver {
         final list = cached?['data'];
         if (list is List) {
           final parsed = list.whereType<Map<String, dynamic>>().map(Peminjaman.fromJson).toList();
-          activeLoans = parsed.where((p) => !p.sudahDikembalikan && !p.isReservasiTidakAktif).toList();
-          historyLoans = parsed.where((p) => p.sudahDikembalikan || p.isReservasiTidakAktif).toList();
+          final newActive = parsed.where((p) => !p.sudahDikembalikan && !p.isReservasiTidakAktif).toList();
+          final newHistory = parsed.where((p) => p.sudahDikembalikan || p.isReservasiTidakAktif).toList();
+          if (_dataFingerprint() != '$newActive|$newHistory|${error ?? ''}') {
+            activeLoans = newActive;
+            historyLoans = newHistory;
+            notifyListeners();
+          }
         }
+      } else if (_dataFingerprint() != _dataFingerprint()) {
+        // fallback: cek apakah error/message berubah
       }
-      error = activeLoans.isEmpty && historyLoans.isEmpty
-          ? 'Data peminjaman tidak dapat dimuat dari server.'
-          : 'Menampilkan data peminjaman terakhir yang tersimpan.';
-      notifyListeners();
     }
   }
 }
